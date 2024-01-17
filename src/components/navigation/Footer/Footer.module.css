@@ -1,0 +1,29 @@
+.footer {
+  background-color: #1f0b02;
+  margin-top: rem(20px);
+}
+
+.inner {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  padding-top: var(--mantine-spacing-sm);
+  padding-bottom: var(--mantine-spacing-sm);
+
+  & > a {
+    display: flex;
+  }
+  @media (max-width: $mantine-breakpoint-xs) {
+    flex-direction: column;
+  }
+}
+
+.links {
+  a {
+    color: white;
+  }
+
+  @media (max-width: $mantine-breakpoint-xs) {
+    margin-top: var(--mantine-spacing-md);
+  }
+}
