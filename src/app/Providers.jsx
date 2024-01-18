@@ -1,6 +1,7 @@
 'use client'
 
 import 'dayjs/locale/pt-br'
+import '@mantine/dates/styles.css';
 
 import { MantineProvider } from '@mantine/core'
 import { DatesProvider } from '@mantine/dates'

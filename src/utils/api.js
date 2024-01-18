@@ -8,7 +8,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   config => {
-    const { token } = getCookie('gatacompleta-cms-token') || {}
+    const { token } = getCookie('agendle-token') || {}
 
     if (
       token &&
@@ -29,7 +29,7 @@ api.interceptors.response.use(
   },
   function (error) {
     if (error.response?.status === 401 && error.response?.data?.detail === 'Token inválido.') {
-      removeCookie('gatacompleta-cms-token')
+      removeCookie('agendle-token')
     }
     return Promise.reject(error)
   }

@@ -15,7 +15,7 @@ function useProvideAuth() {
   const { cache } = useSWRConfig()
 
   // Constants
-  const cookieTokenString = 'gatacompleta-cms-token'
+  const cookieTokenString = 'agendle-token'
   const { token: cookieToken, expiry: cookieExpiry } = getCookie(cookieTokenString) || {}
 
   // States
