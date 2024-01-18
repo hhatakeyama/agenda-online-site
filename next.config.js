@@ -8,6 +8,14 @@ const nextConfig = {
     domains: ['localhost', 'admin.gatacompleta.com', 'dev.gatacompleta.com', 'gatacompleta.com'],
     path: 'https://res.cloudinary.com/gatacompleta/image/fetch/'
   },
+  async rewrites() {
+    return [
+      {
+        source: '/sitemap.xml',
+        destination: '/api/sitemap'
+      }
+    ]
+  }
 }
 
 module.exports = nextConfig

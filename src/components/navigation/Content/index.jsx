@@ -6,7 +6,7 @@ import React from 'react'
 export default function Content({ children }) {
   return (
     <Box style={{ width: '100%' }}>
-      <Container size="lg">
+      <Container size="lg" mb={100}>
         {children}
       </Container>
     </Box>

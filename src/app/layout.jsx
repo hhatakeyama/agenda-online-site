@@ -1,8 +1,8 @@
 import '@mantine/core/styles.css'
-import '@mantine/notifications/styles.css';
+import '@mantine/notifications/styles.css'
 
 import { ColorSchemeScript, Stack } from '@mantine/core'
-import { Notifications } from '@mantine/notifications';
+import { Notifications } from '@mantine/notifications'
 
 import Content from '@/components/navigation/Content'
 import Footer from '@/components/navigation/Footer'
@@ -20,6 +20,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <ColorSchemeScript />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet" />
       </head>
       <body>
         <Providers>

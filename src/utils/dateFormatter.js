@@ -81,6 +81,8 @@ export function datter(input, options = defaultOptions) {
   return { input, output: null, raw: null, display: displayer(input, mergedOptions) }
 }
 
+export const daysOfWeekString = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"]
+
 export const dateToHuman = (date) => {
   const dateObject = new Date(date)
   return new Intl.DateTimeFormat('pt-BR', {

@@ -5,44 +5,36 @@ import { IconPhone } from '@tabler/icons-react';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 
+import { useFetch } from '@/hooks';
+
 import Details from './Details'
 
 export default function Organization() {
   // Hooks
   const { organizationSlug } = useParams()
   const organizationSlugString = organizationSlug.split('_')
-  const organizationid = organizationSlugString[organizationSlugString.length - 1]
-  console.log(organizationid)
+  const organizationId = organizationSlugString[organizationSlugString.length - 1]
 
   // States
-  const [company, setCompany] = useState(null);
+  const [companyId, setCompanyId] = useState(null);
 
   // Fetch
-  // const { data } = useFetch([organizationid ? `/api/site/organizations/${organizationId}` : null])
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const data = {
-    registeredName: 'Barbearia Ltda',
-    tradingName: 'Barbearia',
-    cnpj: '12.345.678/0001-90',
-    status: '1',
-    companies: [
-      { id: 1, name: 'Company 1' },
-      { id: 2, name: 'Company 2' },
-      { id: 3, name: 'Company 3' }
-    ]
-  }
-  const companiesOptions = data?.companies?.map(item => {
+  const { data } = useFetch([organizationId ? `${process.env.NEXT_PUBLIC_ENTRYPOINT}/site/organizations/${organizationId}` : null])
+  const organization = data?.data
+  const companiesOptions = organization?.companies?.map(item => {
     return { value: item.id.toString(), label: item.name.toString() }
   })
 
   // Effect
   useEffect(() => {
-    if (!company && data && companiesOptions.length === 1) setCompany(data.companies[0])
-  }, [companiesOptions.length, company, data])
+    if (organization && !companyId && data && companiesOptions?.length === 1) setCompanyId(organization?.companies?.[0]?.id)
+  }, [companiesOptions?.length, companyId, data, organization])
 
   return (
     <>
-      {!company && company !== '' && companiesOptions?.length > 1 ? (
+      {organization && companyId ? (
+        <Details organization={organization} companyId={companyId} />
+      ) : (
         <>
           <Grid>
             <Grid.Col span={{ base: 12, md: 7, lg: 8 }}>
@@ -94,12 +86,12 @@ export default function Organization() {
               </Stack>
             </Grid.Col>
           </Grid>
-          <Modal opened={true} withCloseButton={false} onClose={() => { }} title="Selecione uma unidade" centered>
-            <Select placeholder="Selecione uma unidade" data={companiesOptions} onChange={option => setCompany(option || null)} />
-          </Modal>
+          {!companyId && companyId !== '' && companiesOptions?.length > 1 && (
+            <Modal opened={true} withCloseButton={false} onClose={() => { }} title="Selecione uma unidade" centered>
+              <Select placeholder="Selecione uma unidade" data={companiesOptions} onChange={option => setCompanyId(option || null)} />
+            </Modal>
+          )}
         </>
-      ) : (
-        <Details company={company} />
       )}
     </>
   )
