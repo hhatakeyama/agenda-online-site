@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { LoginForm } from '@/components/forms'
+import { FormLogin } from '@/components/forms'
 import { useAuth } from '@/providers/AuthProvider'
 
 export default function Login() {
@@ -21,9 +21,9 @@ export default function Login() {
   return (
     <>
       {forgotPassword ? (
-        <LoginForm.ForgotPassword onBack={() => setForgotPassword(false)} onSubmit={login} />
+        <FormLogin.ForgotPassword onBack={() => setForgotPassword(false)} onSubmit={login} />
       ) : (
-        <LoginForm.Basic onForgotPassword={() => setForgotPassword(true)} onSubmit={login} />
+        <FormLogin.Basic onForgotPassword={() => setForgotPassword(true)} onSubmit={login} />
       )}
     </>
   )

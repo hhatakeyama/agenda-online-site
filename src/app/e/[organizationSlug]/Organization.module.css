@@ -1,0 +1,13 @@
+.contact {
+  color: #333333;
+  text-decoration: none;
+}
+
+.contact:hover {
+  text-decoration: underline;
+}
+
+.map iframe {
+  height: 300px;
+  width: 100%;
+}

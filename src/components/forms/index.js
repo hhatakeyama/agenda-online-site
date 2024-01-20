@@ -1,3 +1,3 @@
-export * as AcompanhanteForm from './AcompanhanteForm'
-export * as LoginForm from './LoginForm'
-export * as UsuarioForm from './UsuarioForm'
+export * as FormLogin from './FormLogin'
+export * as FormSchedule from './FormSchedule'
+export * as FormUser from './FormUser'

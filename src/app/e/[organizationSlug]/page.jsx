@@ -19,7 +19,7 @@ export default function Organization() {
   const [companyId, setCompanyId] = useState(null);
 
   // Fetch
-  const { data } = useFetch([organizationId ? `${process.env.NEXT_PUBLIC_ENTRYPOINT}/site/organizations/${organizationId}` : null])
+  const { data } = useFetch([organizationId ? `/site/organizations/${organizationId}` : null])
   const organization = data?.data
   const companiesOptions = organization?.companies?.map(item => {
     return { value: item.id.toString(), label: item.name.toString() }
