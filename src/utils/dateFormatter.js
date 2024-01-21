@@ -86,6 +86,17 @@ export const dateToHuman = (date) => {
   }).format(dateObject)
 }
 
+const isToday = (date) => {
+  const today = new Date()
+  if (
+    date.getYear() === today.getYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDay() === today.getDay()
+  )
+    return true
+  return false
+}
+
 function hoursToMinutes(hoursMinutes) {
   return hoursMinutes.hours * 60 + hoursMinutes.minutes
 }
@@ -104,14 +115,19 @@ export function parseMinutes(time) {
   return hoursToMinutes({ hours: timeHour, minutes: timeMinute })
 }
 
-export function generateHourInterval(startTime, endTime, interval, unavailable) {
+export function generateHourInterval(date, startTime, endTime, interval, unavailable) {
+  // Check today min hour to display
+  const today = new Date()
+  const timeNow = hoursToMinutes({ hours: today.getHours(), minutes: today.getMinutes() })
+  const minTime = isToday(date) ? timeNow : 0
+
   const hourList = []
   if (startTime && endTime && interval) {
     const startTimeMinutes = parseMinutes(startTime)
     const endTimeMinutes = parseMinutes(endTime)
     for (var index = startTimeMinutes; index < endTimeMinutes; index = index + interval) {
       const addHour = minutesToHours(index)
-      if (!unavailable.find(item => Number(item) === Number(index)))
+      if (!unavailable.find(item => Number(item) === Number(index)) && index > minTime)
         hourList.push(addHour)
     }
   }
@@ -119,22 +135,21 @@ export function generateHourInterval(startTime, endTime, interval, unavailable) 
   return hourList
 }
 
-export function generateHourList(dayOfWeek, interval, unavailable = []) {
+export function generateHourList(date, dayOfWeek, interval, unavailable = []) {
   /* TODO: remove unavailable hour interval */
-  /* TODO: unavailable list of minutes e.g.: [540, 610, 640, ...] */
   const hourList = []
   if (dayOfWeek && interval) {
     const intervalTime = parseMinutes(interval)
     const startTime = dayOfWeek.start_time
     const endTime = dayOfWeek.end_time
     if (startTime && endTime && intervalTime) {
-      hourList.push(...generateHourInterval(startTime, endTime, intervalTime, unavailable))
+      hourList.push(...generateHourInterval(date, startTime, endTime, intervalTime, unavailable))
     }
     [2, 3, 4].map(index => {
       const startTimeIndex = dayOfWeek[`start_time_${index}`]
       const endTimeIndex = dayOfWeek[`end_time_${index}`]
       if (startTimeIndex && endTimeIndex && intervalTime) {
-        hourList.push(...generateHourInterval(startTimeIndex, endTimeIndex, intervalTime, unavailable))
+        hourList.push(...generateHourInterval(date, startTimeIndex, endTimeIndex, intervalTime, unavailable))
       }
     })
   }
