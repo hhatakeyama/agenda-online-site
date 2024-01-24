@@ -12,14 +12,12 @@ import Details from './Details'
 export default function Organization() {
   // Hooks
   const { organizationSlug } = useParams()
-  const organizationSlugString = organizationSlug.split('_')
-  const organizationId = organizationSlugString[organizationSlugString.length - 1]
 
   // States
   const [companyId, setCompanyId] = useState(null);
 
   // Fetch
-  const { data } = useFetch([organizationId ? `/site/organizations/${organizationId}` : null])
+  const { data } = useFetch([organizationSlug ? `/site/organizations/${organizationSlug ? 1 : organizationSlug}` : null])
   const organization = data?.data
   const companiesOptions = organization?.companies?.map(item => {
     return { value: item.id.toString(), label: item.name.toString() }

@@ -14,7 +14,7 @@ export default function Categories({ company, categories }) {
   // States
   const [open, setOpen] = useState([]);
   const [search, setSearch] = useState('');
-  const [newSchedule, setNewSchedule] = useState(null);
+  const [newService, setNewService] = useState(null);
 
   // Actions
   const handleOpenService = category => {
@@ -26,7 +26,7 @@ export default function Categories({ company, categories }) {
   }
 
   const handleSchedule = service => {
-    setNewSchedule(service)
+    setNewService(service)
   }
 
   return (
@@ -67,12 +67,12 @@ export default function Categories({ company, categories }) {
         ) : null
       })}
       
-      <Modal opened={newSchedule} onClose={() => setNewSchedule(null)} title="Agendamento" centered size="xl">
-        {company && newSchedule && (
+      <Modal opened={newService} onClose={() => setNewService(null)} title="Agendamento" centered size="xl">
+        {company && newService && (
           <FormSchedule.Basic
             daysOfWeeks={company.days_of_weeks}
             services={services}
-            startService={newSchedule}
+            startService={newService}
           />
         )}
       </Modal>

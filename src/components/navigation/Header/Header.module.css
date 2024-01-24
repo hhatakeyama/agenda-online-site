@@ -3,7 +3,6 @@
   border-bottom: rem(1px) solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
   height: rem(84px);
   margin-bottom: rem(20px);
-  z-index: 1000;
 }
 
 .logo {

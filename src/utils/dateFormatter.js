@@ -118,7 +118,7 @@ export function parseMinutes(time) {
 export function generateHourInterval(date, startTime, endTime, interval, unavailable) {
   // Check today min hour to display
   const today = new Date()
-  const timeNow = hoursToMinutes({ hours: today.getHours(), minutes: today.getMinutes() })
+  const timeNow = hoursToMinutes({ hours: today.getHours(), minutes: today.getMinutes() }) + 60
   const minTime = isToday(date) ? timeNow : 0
 
   const hourList = []
