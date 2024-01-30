@@ -1,6 +1,7 @@
-import { Alert, Avatar, Box, Button, Center, Grid, Group, LoadingOverlay, Paper, Stack, Text, UnstyledButton, useMantineTheme } from '@mantine/core'
+import { Alert, Avatar, Box, Button, Center, Grid, Group, LoadingOverlay, Modal, Paper, Stack, Text, UnstyledButton, useMantineTheme } from '@mantine/core'
 import { DatePicker } from '@mantine/dates'
 import { useMediaQuery } from '@mantine/hooks'
+import { notifications } from '@mantine/notifications'
 import { IconAlertCircle } from '@tabler/icons-react'
 import React, { useState } from 'react'
 
@@ -8,11 +9,12 @@ import { useAuth } from '@/providers/AuthProvider'
 import { api } from '@/utils'
 import { generateHourList } from '@/utils/dateFormatter'
 
+import { FormLogin } from '..'
 import { ScheduleItem } from '.'
 
-export default function Basic({ daysOfWeeks, scheduleData, services, startService }) {
+export default function Basic({ company, daysOfWeeks, scheduleData, services, startService }) {
   // Hooks
-  const { isValidating } = useAuth()
+  const { isAuthenticated, isValidating, login, userData } = useAuth()
   const theme = useMantineTheme()
   const isXs = useMediaQuery(`(max-width: ${theme.breakpoints.xs}px)`)
 
@@ -23,11 +25,12 @@ export default function Basic({ daysOfWeeks, scheduleData, services, startServic
   // States
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [signIn, setSignIn] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [service] = useState(startService)
+  const [selectedService] = useState(startService)
+  const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [selectedDate, setSelectedDate] = useState(today)
   const [selectedStartTime, setSelectedStartTime] = useState(null)
-  const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [items, setItems] = useState([
     {
       service_id: scheduleData?.service_id || startService.id,
@@ -36,50 +39,106 @@ export default function Basic({ daysOfWeeks, scheduleData, services, startServic
       end_time: scheduleData?.end_time || '',
       price: scheduleData?.price || startService?.price,
       duration: scheduleData?.duration || startService?.duration,
+      service: scheduleData?.service || startService,
+      employee: scheduleData?.employee || null,
     }
   ])
   const [dayOfWeek, setDayOfWeek] = useState(todayDayOfWeek)
   // const [unavailableDates, setUnavailableDates] = useState([]) // TODO: List of unavailable dateList
-  const [unavailableHours, setUnavailableHours] = useState([480, 540]) // TODO: List of unavailable hourList in minutes. Get when date change
+  const [unavailableHours, setUnavailableHours] = useState([]) // TODO: List of unavailable hourList in minutes. Get when date change
 
-  const hourList = generateHourList(selectedDate, dayOfWeek, service?.duration, unavailableHours) || []
+  const hourList = generateHourList(selectedDate, dayOfWeek, selectedService?.duration, unavailableHours) || []
+  const canChooseRandom = selectedService?.can_choose_random === 1 || selectedService?.can_choose_random === '1'
+  const canChooseEmployee = selectedService?.can_choose_employee === 1 || selectedService?.can_choose_employee === '1'
+  const showDates = (
+    !canChooseEmployee ||
+    (
+      canChooseEmployee &&
+      (canChooseRandom || (!canChooseRandom && !!selectedEmployee))
+    )
+  )
+  const canSubmit = company && !!selectedDate && (!canChooseEmployee || (canChooseEmployee && !!selectedEmployee)) && !!selectedService && !!selectedStartTime
 
   // Actions
   const handleSubmit = async () => {
-    setError(null)
-    setIsSubmitting(true)
-    // return api
-    //   .patch(`/admin/usuarios/${scheduleData?.id}/`, {
-    //     ...newValues, ...(newValues ? { password_confirmation: newValues.confirmPassword } : {})
-    //   }) // Verificar usuário logado no painel
-    //   .then(() => {
-    //     notifications.show({
-    //       title: 'Sucesso',
-    //       message: 'Dados atualizados com sucesso!',
-    //       color: 'green'
-    //     })
-    //   })
-    //   .catch(error => {
-    //     notifications.show({
-    //       title: 'Erro',
-    //       message:
-    //         errorHandler(error.response.data.errors).messages ||
-    //         'Erro ao atualizar os dados. Entre em contato com o administrador do site ou tente novamente mais tarde.',
-    //       color: 'red'
-    //     })
-    //   })
-    //   .finally(() => setIsSubmitting(false))
-    setError(null)
-    setIsSubmitting(false)
+    if (!isValidating && isAuthenticated) {
+      setError(null)
+      setIsSubmitting(true)
+      console.log({
+        employee_id: selectedEmployee.id,
+        company_id: company.id,
+        client_id: userData.id,
+        date: selectedDate.toISOString(),
+        items
+      })
+      return await api
+        .post(`/site/schedules/create/`, {
+          employee_id: selectedEmployee.id,
+          company_id: company.id,
+          client_id: userData.id,
+          date: selectedDate.toISOString(),
+          items
+        })
+        .then(() => {
+          notifications.show({
+            title: 'Sucesso',
+            message: 'Agendamento realizado com sucesso!',
+            color: 'green'
+          })
+        })
+        .catch(error => {
+          console.log(error)
+          notifications.show({
+            title: 'Erro',
+            message: error?.response?.data?.message ||
+              'Erro ao finalizar agendamento. Entre em contato com o administrador do site ou tente novamente mais tarde.',
+            color: 'red'
+          })
+        })
+        .finally(() => {
+          setError(null)
+          setIsSubmitting(false)
+        })
+    } else {
+      setSignIn(true)
+    }
   }
 
-  const handleSelectEmployee = employee => {
+  // const handleChangeScheduleItemValue = (changingField, newValue) => {
+  //   const newItems = [...items]
+  //   const changingScheduleItem = 0 // First item, implement when multiple schedule items
+  //   newItems.map((item, index) => {
+  //     const newItem = {...item}
+  //     if (index === changingScheduleItem) {
+  //       console.log(item, index, changingField, newValue)
+  //       newItem[changingField] = newValue
+  //       console.log(newItem)
+  //       return newItem
+  //     }
+  //     return item
+  //   })
+  //   console.log("newItems", newItems)
+  //   setItems([...newItems])
+  // }
+
+  const handleSelectEmployee = async employee => {
     setLoading(true)
     setSelectedEmployee(employee)
+    // handleChangeScheduleItemValue('employee', employee || null)
+    // handleChangeScheduleItemValue('employee_id', employee?.id || null)
     // TODO: get employee schedules
-    const data = api.get(`/site/schedulesFromEmployee/${employee.id}/`)
-    console.log(data)
-
+    if (employee) {
+      await api.get(`/site/schedules-from-employee/${employee.id}/`)
+        .then(response => {
+          console.log(response?.data?.data)
+          setUnavailableHours(response?.data?.data)
+        })
+        .catch(error => {
+          console.log(error?.response?.data)
+        })
+    } else {
+      setUnavailableHours([])
+    }
     setLoading(false)
   }
 
@@ -94,32 +153,51 @@ export default function Basic({ daysOfWeeks, scheduleData, services, startServic
     setSelectedStartTime(null)
   }
 
+  const handleSelectStartTime = startTime => {
+    setSelectedStartTime(startTime)
+    // TODO: change start time of scheduleItem
+  }
+
   return (
     <Box style={{ position: 'relative' }}>
       <LoadingOverlay visible={isValidating} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
 
       <Stack>
-        <Text>Selecione um colaborador</Text>
-        <Group>
-          {service?.employees?.map(employee => (
-            <UnstyledButton onClick={() => handleSelectEmployee(employee)} key={employee.id}>
-              <Center>
-                <Stack align="center" gap="xs">
-                  <Avatar src={employee.picture} size={70} style={{ border: selectedEmployee?.id === employee.id ? '3px solid #f57842' : '3px solid #333333' }} />
-                  <Text fw={selectedEmployee?.id === employee.id ? 700 : 400}>{employee.name.split(' ')[0]}</Text>
-                </Stack>
-              </Center>
-            </UnstyledButton>
-          ))}
-        </Group>
+        {canChooseEmployee && (
+          <>
+            <Text fw={700}>Selecione um colaborador</Text>
+            <Group justify="center">
+              {canChooseRandom && (
+                <UnstyledButton onClick={() => handleSelectEmployee(null)}>
+                  <Center>
+                    <Stack align="center" gap="xs">
+                      <Avatar src={''} size={70} style={{ border: !selectedEmployee ? '3px solid #f57842' : '3px solid #333333' }} />
+                      <Text fw={!selectedEmployee ? 700 : 400}>Disponível</Text>
+                    </Stack>
+                  </Center>
+                </UnstyledButton>
+              )}
+              {selectedService?.employees?.map(employee => (
+                <UnstyledButton onClick={() => handleSelectEmployee(employee)} key={employee.id}>
+                  <Center>
+                    <Stack align="center" gap="xs">
+                      <Avatar src={employee.picture} size={70} style={{ border: selectedEmployee?.id === employee.id ? '3px solid #f57842' : '3px solid #333333' }} />
+                      <Text fw={selectedEmployee?.id === employee.id ? 700 : 400}>{employee.name.split(' ')[0]}</Text>
+                    </Stack>
+                  </Center>
+                </UnstyledButton>
+              ))}
+            </Group>
+          </>
+        )}
 
-        {!!selectedEmployee && (
+        {showDates && (
           <Stack pos="relative">
             <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
             <Grid>
               <Grid.Col span={{ base: 12, xs: 6, sm: 5 }}>
                 <Stack>
-                  <Text>Selecione uma data</Text>
+                  <Text fw={700}>Selecione uma data</Text>
                   <Paper shadow="sm">
                     <Center>
                       <DatePicker
@@ -135,7 +213,7 @@ export default function Basic({ daysOfWeeks, scheduleData, services, startServic
               <Grid.Col span={{ base: 12, xs: 6, sm: 7 }}>
                 {selectedDate && (
                   <Stack>
-                    <Text>Horários disponíveis</Text>
+                    <Text fw={700}>Horários disponíveis</Text>
                     {hourList.length > 0 ? (
                       <Grid gutter={10}>
                         {hourList.map(hour => (
@@ -144,7 +222,7 @@ export default function Basic({ daysOfWeeks, scheduleData, services, startServic
                               variant={selectedStartTime === hour ? "filled" : "outline"}
                               fullWidth
                               p={0}
-                              onClick={() => setSelectedStartTime(hour)}>
+                              onClick={() => handleSelectStartTime(hour)}>
                               {hour}
                             </Button>
                           </Grid.Col>
@@ -166,8 +244,8 @@ export default function Basic({ daysOfWeeks, scheduleData, services, startServic
                   key={`item-${index}`}
                   editValues={item}
                   services={services}
+                  employee={selectedEmployee}
                   startTime={selectedStartTime}
-                  onSubmit={() => { }}
                 />
               ))}
             </Grid>
@@ -178,7 +256,7 @@ export default function Basic({ daysOfWeeks, scheduleData, services, startServic
                 type="button"
                 size={isXs ? 'sm' : 'md'}
                 fullWidth={!!isXs}
-                disabled={false}
+                disabled={!canSubmit}
                 loading={isSubmitting}
                 onClick={handleSubmit}>
                 Continuar
@@ -189,6 +267,10 @@ export default function Basic({ daysOfWeeks, scheduleData, services, startServic
 
         {!!error && <Alert color="red" title="Erro">{error}</Alert>}
       </Stack>
+
+      <Modal opened={signIn} onClose={() => setSignIn(null)} title="Login" centered size="xl">
+        {signIn && <FormLogin.Basic onSubmit={login} />}
+      </Modal>
     </Box>
   )
 }

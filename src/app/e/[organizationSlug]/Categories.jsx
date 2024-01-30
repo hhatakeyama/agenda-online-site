@@ -70,6 +70,7 @@ export default function Categories({ company, categories }) {
       <Modal opened={newService} onClose={() => setNewService(null)} title="Agendamento" centered size="xl">
         {company && newService && (
           <FormSchedule.Basic
+            company={company}
             daysOfWeeks={company.days_of_weeks}
             services={services}
             startService={newService}

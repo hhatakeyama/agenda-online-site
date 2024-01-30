@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { useSWRConfig } from 'swr'
 
-import { useFetch } from '@/hooks'
+// import { useFetch } from '@/hooks'
 import { api, getCookie, removeCookie, setCookie } from '@/utils'
 
 const AuthContext = createContext(null)
@@ -22,23 +22,20 @@ function useProvideAuth() {
   const [loading, setLoading] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(null)
   const [isValidating, setIsValidating] = useState(null)
-  // const [permissionsData, setPermissionsData] = useState(['admin'])
-  // const permissionsIsValidating = false
 
   // // Fetch
-  const { data: userData, isValidating: userIsValidating } = useFetch([
-    !!isAuthenticated ? '/admin/accounts/me/' : null
-  ])
-
-  const { data: permissionsData, isValidating: permissionsIsValidating } = useFetch([
-    !!isAuthenticated ? '/admin/accounts/permissions/' : null
-  ])
+  const userData = { id: 1 }
+  const userIsValidating = false
+  // TODO: Adjust loggedUser data
+  // const { data: userData, isValidating: userIsValidating } = useFetch([
+  //   !!isAuthenticated ? '/accounts/me/' : null
+  // ])
 
   // Login with credentials
   const login = async (credentials) => {
     setLoading(true)
     const response = await api
-      .post('/admin/authentication/login/', {
+      .post('/login-client/', {
         email: credentials.email,
         password: credentials.password
       })
@@ -56,10 +53,8 @@ function useProvideAuth() {
       })
       .catch(error => {
         return {
-          error:
-            error?.response?.data?.message === 'Unauthorized'
-              ? 'E-mail ou senha inválidos'
-              : 'Ocorreu um erro inesperado. Tente novamente mais tarde'
+          error: error?.response?.data?.message === 'Unauthorized' ? 'E-mail ou senha inválidos' : error?.response?.data?.message ||
+            'Ocorreu um erro inesperado. Tente novamente mais tarde'
         }
       })
       .finally(() => setLoading(false))
@@ -74,7 +69,6 @@ function useProvideAuth() {
     } finally {
       removeCookie(cookieTokenString)
       setIsAuthenticated(false)
-      setPermissionsData(null)
     }
   }
 
@@ -118,8 +112,8 @@ function useProvideAuth() {
   }, [verifyToken, cookieToken])
 
   useEffect(() => {
-    setIsValidating(loading || userIsValidating || permissionsIsValidating)
-  }, [loading, userIsValidating, permissionsIsValidating])
+    setIsValidating(loading || userIsValidating)
+  }, [loading, userIsValidating])
 
   // Clear all SWR cache (experimental)
   useEffect(() => {
@@ -135,8 +129,7 @@ function useProvideAuth() {
     verifyToken,
     isAuthenticated,
     isValidating,
-    userData,
-    permissionsData
+    userData
   }
 }
 
