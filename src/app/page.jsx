@@ -5,7 +5,7 @@ import { Stack } from '@mantine/core'
 export default function Home() {
   return (
     <Stack>
-      Home Agendle
+      Home Skedyou
     </Stack>
   )
 }

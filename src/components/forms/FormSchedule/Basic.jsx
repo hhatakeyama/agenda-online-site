@@ -3,11 +3,11 @@ import { DatePicker } from '@mantine/dates'
 import { useMediaQuery } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { IconAlertCircle } from '@tabler/icons-react'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { useAuth } from '@/providers/AuthProvider'
 import { api } from '@/utils'
-import { generateHourList } from '@/utils/dateFormatter'
+import { generateHourList, minutesToHours, parseMinutes } from '@/utils/dateFormatter'
 
 import { FormLogin } from '..'
 import { ScheduleItem } from '.'
@@ -57,27 +57,32 @@ export default function Basic({ company, daysOfWeeks, scheduleData, services, st
       (canChooseRandom || (!canChooseRandom && !!selectedEmployee))
     )
   )
-  const canSubmit = company && !!selectedDate && (!canChooseEmployee || (canChooseEmployee && !!selectedEmployee)) && !!selectedService && !!selectedStartTime
+  const canSubmit =
+    company &&
+    !!selectedDate &&
+    (!canChooseEmployee ||
+      (canChooseEmployee &&
+        (canChooseRandom || (!canChooseRandom && !!selectedEmployee))
+      )
+    ) &&
+    !!selectedService &&
+    !!selectedStartTime
 
   // Actions
   const handleSubmit = async () => {
     if (!isValidating && isAuthenticated) {
       setError(null)
       setIsSubmitting(true)
-      console.log({
-        employee_id: selectedEmployee.id,
-        company_id: company.id,
-        client_id: userData.id,
-        date: selectedDate.toISOString(),
-        items
+      const newItems = items.map(item => {
+        const { employee, service, ...restItem } = item
+        return restItem
       })
       return await api
         .post(`/site/schedules/create/`, {
-          employee_id: selectedEmployee.id,
           company_id: company.id,
           client_id: userData.id,
           date: selectedDate.toISOString(),
-          items
+          items: newItems
         })
         .then(() => {
           notifications.show({
@@ -87,7 +92,6 @@ export default function Basic({ company, daysOfWeeks, scheduleData, services, st
           })
         })
         .catch(error => {
-          console.log(error)
           notifications.show({
             title: 'Erro',
             message: error?.response?.data?.message ||
@@ -104,28 +108,16 @@ export default function Basic({ company, daysOfWeeks, scheduleData, services, st
     }
   }
 
-  // const handleChangeScheduleItemValue = (changingField, newValue) => {
-  //   const newItems = [...items]
-  //   const changingScheduleItem = 0 // First item, implement when multiple schedule items
-  //   newItems.map((item, index) => {
-  //     const newItem = {...item}
-  //     if (index === changingScheduleItem) {
-  //       console.log(item, index, changingField, newValue)
-  //       newItem[changingField] = newValue
-  //       console.log(newItem)
-  //       return newItem
-  //     }
-  //     return item
-  //   })
-  //   console.log("newItems", newItems)
-  //   setItems([...newItems])
-  // }
+  const handleChangeScheduleItemValue = (newValue) => {
+    const changingScheduleItem = 0 // First item, implement when multiple schedule items
+    const newItem = {...items[changingScheduleItem]}
+    setItems([{ ...newItem, ...newValue }])
+  }
 
   const handleSelectEmployee = async employee => {
     setLoading(true)
     setSelectedEmployee(employee)
-    // handleChangeScheduleItemValue('employee', employee || null)
-    // handleChangeScheduleItemValue('employee_id', employee?.id || null)
+    handleChangeScheduleItemValue({ employee: employee || null, employee_id: employee?.id || null })
     // TODO: get employee schedules
     if (employee) {
       await api.get(`/site/schedules-from-employee/${employee.id}/`)
@@ -156,7 +148,20 @@ export default function Basic({ company, daysOfWeeks, scheduleData, services, st
   const handleSelectStartTime = startTime => {
     setSelectedStartTime(startTime)
     // TODO: change start time of scheduleItem
+    if (startTime) {
+      const startTimeMinutes = parseMinutes(startTime)
+      const intervalMinutes = parseMinutes(items[0].duration)
+      const endTime = minutesToHours(startTimeMinutes + intervalMinutes)
+      handleChangeScheduleItemValue({ start_time: startTime || '', end_time: endTime })
+    } else {
+      handleChangeScheduleItemValue({ end_time: '' })
+    }
   }
+
+  // Effects
+  useEffect(() => {
+    if (isAuthenticated && userData && signIn) setSignIn(false)
+  }, [isAuthenticated, userData, signIn])
 
   return (
     <Box style={{ position: 'relative' }}>

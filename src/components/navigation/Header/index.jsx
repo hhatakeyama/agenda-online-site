@@ -51,7 +51,7 @@ export default function Header() {
     <header className={classes.header}>
       <Container className={classes.mainSection} size="lg">
         <Group justify="space-between">
-          <Link href="/" className={classes.logo}>Agendle</Link>
+          <Link href="/" className={classes.logo}>Skedyou</Link>
           <Box className={classes.links} visibleFrom="sm">
             <Group justify="flex-end">
               {userData ? (

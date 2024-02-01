@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { useSWRConfig } from 'swr'
 
+import { useFetch } from '@/hooks'
 // import { useFetch } from '@/hooks'
 import { api, getCookie, removeCookie, setCookie } from '@/utils'
 
@@ -15,7 +16,7 @@ function useProvideAuth() {
   const { cache } = useSWRConfig()
 
   // Constants
-  const cookieTokenString = 'agendle-token'
+  const cookieTokenString = 'skedyou-token'
   const { token: cookieToken, expiry: cookieExpiry } = getCookie(cookieTokenString) || {}
 
   // States
@@ -24,12 +25,10 @@ function useProvideAuth() {
   const [isValidating, setIsValidating] = useState(null)
 
   // // Fetch
-  const userData = { id: 1 }
-  const userIsValidating = false
   // TODO: Adjust loggedUser data
-  // const { data: userData, isValidating: userIsValidating } = useFetch([
-  //   !!isAuthenticated ? '/accounts/me/' : null
-  // ])
+  const { data: userData, isValidating: userIsValidating } = useFetch([
+    !!isAuthenticated ? '/me/' : null
+  ])
 
   // Login with credentials
   const login = async (credentials) => {
@@ -129,7 +128,7 @@ function useProvideAuth() {
     verifyToken,
     isAuthenticated,
     isValidating,
-    userData
+    userData: userData?.data || {}
   }
 }
 
