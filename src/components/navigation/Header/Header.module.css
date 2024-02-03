@@ -15,7 +15,7 @@
 }
 
 .links {
-  padding-top: var(--mantine-spacing-lg);
+  padding-top: 10px;
   height: rem(84px);
   display: flex;
   flex-direction: column;
@@ -53,14 +53,14 @@
 }
 
 .user {
-  background-color: #333333;
+  border: 1px solid #FFFFFF;
   color: white;
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
   border-radius: var(--mantine-radius-sm);
   transition: background-color 100ms ease;
 
   &:hover {
-    background-color: #666666;
+    background-color: #FFFFFF;
+    color: #333333;
   }
 
   @media (max-width: $mantine-breakpoint-xs) {
@@ -69,5 +69,6 @@
 }
 
 .userActive {
-  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-8));
+  background-color: #FFFFFF;
+  color: #333333;
 }

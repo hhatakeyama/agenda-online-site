@@ -5,7 +5,7 @@ import { useSWRConfig } from 'swr'
 
 import { useFetch } from '@/hooks'
 // import { useFetch } from '@/hooks'
-import { api, getCookie, removeCookie, setCookie } from '@/utils'
+import { api, getCookie, removeCookie, removeStorage, setCookie } from '@/utils'
 
 const AuthContext = createContext(null)
 
@@ -24,8 +24,7 @@ function useProvideAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(null)
   const [isValidating, setIsValidating] = useState(null)
 
-  // // Fetch
-  // TODO: Adjust loggedUser data
+  // Fetch
   const { data: userData, isValidating: userIsValidating } = useFetch([
     !!isAuthenticated ? '/me/' : null
   ])
@@ -64,9 +63,10 @@ function useProvideAuth() {
   // Logout user from API
   const logout = async () => {
     try {
-      await api.post('/admin/authentication/logout/')
+      await api.post('/logout/')
     } finally {
       removeCookie(cookieTokenString)
+      removeStorage('services')
       setIsAuthenticated(false)
     }
   }

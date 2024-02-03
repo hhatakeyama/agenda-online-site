@@ -1,4 +1,4 @@
-const STORAGE_KEY = '@gatacompleta-cms/'
+const STORAGE_KEY = '@skedyou-stg/'
 
 export const getStorage = (name, isString = false) => {
   if (typeof localStorage !== 'undefined') {

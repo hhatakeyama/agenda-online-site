@@ -74,16 +74,24 @@ export function datter(input, options = defaultOptions) {
 
 export const daysOfWeekString = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"]
 
-export const dateToHuman = (date) => {
+export const dateToHuman = (date, type = 'datetime') => {
   const dateObject = new Date(date)
-  return new Intl.DateTimeFormat('pt-BR', {
+  let format = {
     year: "numeric",
     month: "numeric",
     day: "numeric",
     hour: "numeric",
     minute: "numeric",
     timeZone: 'UTC',
-  }).format(dateObject)
+  }
+  if (type === 'date') {
+    format = {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    }
+  }
+  return new Intl.DateTimeFormat('pt-BR', format).format(dateObject)
 }
 
 const isToday = (date) => {
@@ -127,6 +135,7 @@ export function generateHourInterval(date, startTime, endTime, interval, unavail
     const endTimeMinutes = parseMinutes(endTime)
     for (var index = startTimeMinutes; index < endTimeMinutes; index = index + interval) {
       const addHour = minutesToHours(index)
+      // TODO: check if hour is not equal start_time and smaller than start_time + duration 
       if (!unavailable.find(item => Number(item) === Number(index)) && index > minTime)
         hourList.push(addHour)
     }
@@ -155,4 +164,71 @@ export function generateHourList(date, dayOfWeek, interval, unavailable = []) {
   }
 
   return hourList
+}
+
+export function verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour) {
+  const hourInMinutes = hour ? parseMinutes(hour) : 0
+  if (hourList.length > 0) {
+    const endTime = dayOfWeek?.end_time ? parseMinutes(dayOfWeek.end_time) - totalDuration : 0
+    const startTime2 = dayOfWeek?.start_time_2 ? parseMinutes(dayOfWeek.start_time_2) : 0
+    const endTime2 = dayOfWeek?.end_time_2 ? parseMinutes(dayOfWeek.end_time_2) - totalDuration : 0
+    const startTime3 = dayOfWeek?.start_time_3 ? parseMinutes(dayOfWeek.start_time_3) : 0
+    const endTime3 = dayOfWeek?.end_time_3 ? parseMinutes(dayOfWeek.end_time_3) - totalDuration : 0
+    const startTime4 = dayOfWeek?.start_time_4 ? parseMinutes(dayOfWeek.start_time_4) : 0
+    const endTime4 = dayOfWeek?.end_time_4 ? parseMinutes(dayOfWeek.end_time_4) - totalDuration : 0
+
+    if (endTime4) {
+      return (hourInMinutes < endTime) ||
+        (
+          !endTime2 || (
+            endTime2 > 0 &&
+            hourInMinutes >= startTime2 &&
+            hourInMinutes < endTime2
+          )
+        ) ||
+        (
+          !endTime3 || (
+            endTime3 > 0 &&
+            hourInMinutes >= startTime3 &&
+            hourInMinutes < endTime3
+          )
+        ) ||
+        (
+          !endTime4 || (
+            endTime4 > 0 &&
+            hourInMinutes >= startTime4 &&
+            hourInMinutes < endTime4
+          )
+        )
+    }
+    if (endTime3) {
+      return (hourInMinutes < endTime) ||
+        (
+          !endTime2 || (
+            endTime2 > 0 &&
+            hourInMinutes >= startTime2 &&
+            hourInMinutes < endTime2
+          )
+        ) ||
+        (
+          !endTime3 || (
+            endTime3 > 0 &&
+            hourInMinutes >= startTime3 &&
+            hourInMinutes < endTime3
+          )
+        )
+    }
+    if (endTime2) {
+      return (hourInMinutes <= endTime) ||
+        (
+          !endTime2 || (
+            endTime2 > 0 &&
+            hourInMinutes >= startTime2 &&
+            hourInMinutes <= endTime2
+          )
+        )
+    }
+    return hourInMinutes <= endTime
+  }
+  return false
 }

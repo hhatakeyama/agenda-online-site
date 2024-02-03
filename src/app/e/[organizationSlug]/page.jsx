@@ -2,36 +2,33 @@
 
 import { Grid, Group, Modal, Select, Skeleton, Stack, Text } from '@mantine/core'
 import { IconPhone } from '@tabler/icons-react';
-import { useParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 
-import { useFetch } from '@/hooks';
+import { useOrganization } from '@/providers/OrganizationProvider';
 
 import Details from './Details'
 
 export default function Organization() {
   // Hooks
-  const { organizationSlug } = useParams()
-
-  // States
-  const [companyId, setCompanyId] = useState(null);
+  const { companies, organization, selectedCompanyId, setSelectedCompany, setSelectedCompanyId } = useOrganization()
 
   // Fetch
-  const { data } = useFetch([organizationSlug ? `/site/organizations/${organizationSlug}` : null])
-  const organization = data?.data
-  const companiesOptions = organization?.companies?.map(item => {
+  const companiesOptions = companies.map(item => {
     return { value: item.id.toString(), label: item.name.toString() }
-  })
+  }) || []
 
   // Effect
   useEffect(() => {
-    if (organization && !companyId && data && companiesOptions?.length === 1) setCompanyId(organization?.companies?.[0]?.id)
-  }, [companiesOptions?.length, companyId, data, organization])
+    if (organization && !selectedCompanyId && companiesOptions?.length === 1 && companies[0]) {
+      setSelectedCompany(companies[0])
+      setSelectedCompanyId(companies[0].id)
+    }
+  }, [companies, companiesOptions?.length, organization, selectedCompanyId, setSelectedCompany, setSelectedCompanyId])
 
   return (
     <>
-      {organization && companyId ? (
-        <Details organization={organization} companyId={companyId} />
+      {organization && selectedCompanyId ? (
+        <Details />
       ) : (
         <>
           <Grid>
@@ -84,9 +81,9 @@ export default function Organization() {
               </Stack>
             </Grid.Col>
           </Grid>
-          {!companyId && companyId !== '' && companiesOptions?.length > 1 && (
+          {!selectedCompanyId && companiesOptions.length > 1 && (
             <Modal opened={true} withCloseButton={false} onClose={() => { }} title="Selecione uma unidade" centered>
-              <Select placeholder="Selecione uma unidade" data={companiesOptions} onChange={option => setCompanyId(option || null)} />
+              <Select placeholder="Selecione uma unidade" data={companiesOptions} onChange={option => setSelectedCompanyId(option || null)} />
             </Modal>
           )}
         </>

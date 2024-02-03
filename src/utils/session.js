@@ -1,4 +1,4 @@
-const SESSION_KEY = '@gatacompleta-cms/'
+const SESSION_KEY = '@skedyou-session/'
 
 export const removeSession = (name) => {
   if (typeof window !== 'undefined') {
