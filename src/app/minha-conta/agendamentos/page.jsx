@@ -1,17 +1,10 @@
 'use client'
 
 import { Stack, Text } from '@mantine/core'
-import { useRouter } from 'next/navigation'
 
-import { useAuth } from '@/providers/AuthProvider'
+import guardAccount from '@/guards/AccountGuard'
 
-export default function Schedules() {
-  // Hooks
-  const router = useRouter()
-  const { isAuthenticated, isValidating, userData } = useAuth()
-
-  if (!isValidating && !isAuthenticated && !userData) return router.push('/minha-conta/login')
-
+function Schedules() {
   return (
     <Stack>
       <Text c="orange" size="lg" fw={700}>Agendamentos</Text>
@@ -19,3 +12,5 @@ export default function Schedules() {
     </Stack>
   )
 }
+
+export default guardAccount(Schedules)

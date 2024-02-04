@@ -1,22 +1,17 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { FormLogin } from '@/components/forms'
+import guardAccount from '@/guards/AccountGuard'
 import { useAuth } from '@/providers/AuthProvider'
 
-export default function Login() {
+function Login() {
   // Hooks
-  const { isAuthenticated, login, userData } = useAuth()
-  const router = useRouter()
+  const { login } = useAuth()
 
   // States
   const [forgotPassword, setForgotPassword] = useState(false)
-
-  useEffect(() => {
-    if (isAuthenticated === true) router.push('/')
-  }, [isAuthenticated, router, userData])
 
   return (
     <>
@@ -28,3 +23,5 @@ export default function Login() {
     </>
   )
 }
+
+export default guardAccount(Login)

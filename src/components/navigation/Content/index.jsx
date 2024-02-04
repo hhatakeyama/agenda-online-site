@@ -5,7 +5,7 @@ import React from 'react'
 
 export default function Content({ children }) {
   return (
-    <Box style={{ width: '100%' }}>
+    <Box style={{ minHeight: 'calc(100vh - 168px)', width: '100%' }}>
       <Container size="lg" mb={100}>
         {children}
       </Container>

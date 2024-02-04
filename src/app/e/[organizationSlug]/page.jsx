@@ -4,11 +4,12 @@ import { Grid, Group, Modal, Select, Skeleton, Stack, Text } from '@mantine/core
 import { IconPhone } from '@tabler/icons-react';
 import React, { useEffect } from 'react'
 
+import guardOrganization from '@/guards/OrganizationGuard';
 import { useOrganization } from '@/providers/OrganizationProvider';
 
 import Details from './Details'
 
-export default function Organization() {
+function Organization() {
   // Hooks
   const { companies, organization, selectedCompanyId, setSelectedCompany, setSelectedCompanyId } = useOrganization()
 
@@ -91,3 +92,5 @@ export default function Organization() {
     </>
   )
 }
+
+export default guardOrganization(Organization)

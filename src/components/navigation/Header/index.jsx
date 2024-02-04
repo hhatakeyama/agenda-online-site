@@ -31,10 +31,11 @@ import classes from './Header.module.css'
 export default function Header() {
   // Hooks
   const { logout, isAuthenticated, userData } = useAuth()
-  const pathname = usePathname()
   const { openCartMenu, schedule, setOpenCartMenu } = useSchedule()
+  const pathname = usePathname()
 
   // Constants
+  const showCart = pathname.indexOf('/e/') !== -1
   const menu = [
     { link: '/category/barbearias', label: 'Barbearias' },
     { link: '/category/manicures', label: 'Manicures' },
@@ -62,50 +63,44 @@ export default function Header() {
           <Link href="/" className={classes.logo}>Skedyou</Link>
           <Box className={classes.links} visibleFrom="sm">
             <Group justify="flex-end">
+              {showCart && (
+                <Tooltip opened={openEmptyCartMenu} label="Nenhum serviço selecionado">
+                  <ActionIcon color="white" variant="transparent" size="lg" onClick={() => schedule.items.length > 0 ? setOpenCartMenu(true) : setOpenEmptyCartMenu(!openEmptyCartMenu)}>
+                    <Indicator inline label={schedule.items.length} size={16}>
+                      <IconShoppingCart />
+                    </Indicator>
+                  </ActionIcon>
+                </Tooltip>
+              )}
               {isAuthenticated && userData ? (
-                <>
-                  <Tooltip opened={openEmptyCartMenu} label="Nenhum serviço selecionado">
-                    <ActionIcon color="white" variant="transparent" size="lg" onClick={() => schedule.items.length > 0 ? setOpenCartMenu(true) : setOpenEmptyCartMenu(!openEmptyCartMenu)}>
-                      <Indicator inline label={schedule.items.length} size={16}>
-                        <IconShoppingCart />
-                      </Indicator>
-                    </ActionIcon>
-                  </Tooltip>
-                  <Menu
-                    width={260}
-                    position="bottom-end"
-                    transitionProps={{ transition: 'pop-top-right' }}
-                    onClose={() => setOpenUserMenu(false)}
-                    onOpen={() => setOpenUserMenu(true)}
-                    withinPortal
-                    styles={{ dropdown: { zIndex: 1001 } }}
-                  >
-                    <Menu.Target>
-                      <UnstyledButton p={5} className={cx(classes.user, { [classes.userActive]: openUserMenu })}>
-                        <Group gap={7}>
-                          <Avatar src={userData?.image} alt={userData?.name} radius="xl" size={22} />
-                          <Text fw={500} size="sm" lh={1} mr={3}>
-                            {userData?.name}
-                          </Text>
-                          <IconChevronDown style={{ width: rem(12), height: rem(12) }} stroke={1.5} />
-                        </Group>
-                      </UnstyledButton>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item component="a" href="/minha-conta">
-                        Minha Conta
-                      </Menu.Item>
-                      <Menu.Item component="a" href="/minha-conta/agendamentos">
-                        Meus agendamentos
-                      </Menu.Item>
-                      <Menu.Item onClick={logout}>
-                        Logout
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </>
+                <Menu
+                  width={260}
+                  position="bottom-end"
+                  transitionProps={{ transition: 'pop-top-right' }}
+                  onClose={() => setOpenUserMenu(false)}
+                  onOpen={() => setOpenUserMenu(true)}
+                  withinPortal
+                  styles={{ dropdown: { zIndex: 1001 } }}
+                >
+                  <Menu.Target>
+                    <UnstyledButton p={5} className={cx(classes.user, { [classes.userActive]: openUserMenu })}>
+                      <Group gap={7}>
+                        <Avatar color="white" src={userData?.image} alt={userData?.name} radius="xl" size={22} />
+                        <Text fw={500} size="sm" lh={1} mr={3}>
+                          {userData?.name}
+                        </Text>
+                        <IconChevronDown style={{ width: rem(12), height: rem(12) }} stroke={1.5} />
+                      </Group>
+                    </UnstyledButton>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item component="a" href="/minha-conta">Minha Conta</Menu.Item>
+                    <Menu.Item component="a" href="/minha-conta/agendamentos">Meus agendamentos</Menu.Item>
+                    <Menu.Item onClick={logout}>Logout</Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
               ) : (
-                <UnstyledButton component="a" href="/minha-conta/login" p={8} className={classes.user}>
+                <UnstyledButton component="a" href={`/minha-conta/login?redirectCallback=${pathname}`} p={8} className={classes.user}>
                   <Text fw={500} size="sm" lh={1} mr={3}>
                     Login
                   </Text>
