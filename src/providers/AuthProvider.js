@@ -60,6 +60,31 @@ function useProvideAuth() {
     return response
   }
 
+  const register = async (newValues) => {
+    setLoading(true)
+    return await api
+      .post('/site/clients/create/', {
+        ...newValues,
+        ...(newValues ? { password_confirmation: newValues.confirmPassword } : {})
+      })
+      .then(response => {
+        const { data } = response || {}
+        if (data?.token) {
+          const date = new Date()
+          date.setDate(date.getDate() + 1)
+          const tokenData = { expiry: date.toISOString(), token: data.token }
+          setCookie(cookieTokenString, tokenData)
+          setIsAuthenticated(true)
+        } else {
+          return { error: 'E-mail ou senha inválidos' }
+        }
+      })
+      .catch(error => {
+        return { error: error?.response?.data?.message || 'Ocorreu um erro inesperado. Tente novamente mais tarde' }
+      })
+      .finally(() => setLoading(false))
+  }
+
   // Logout user from API
   const logout = async () => {
     try {
@@ -125,6 +150,7 @@ function useProvideAuth() {
     logout,
     forgotPassword,
     resetPassword,
+    register,
     verifyToken,
     isAuthenticated,
     isValidating,

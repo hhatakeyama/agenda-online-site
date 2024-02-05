@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Avatar, Box, Center, Grid, Group, Image, Skeleton, Space, Stack, Text, Title } from '@mantine/core'
+import { ActionIcon, Avatar, Box, Center, Grid, Group, Image, Space, Stack, Text, Title } from '@mantine/core'
 import { IconBrandFacebook, IconBrandInstagram, IconBrandWhatsapp, IconBrandX, IconMail, IconPhone } from '@tabler/icons-react'
 import Link from 'next/link'
 import React from 'react'
@@ -37,7 +37,7 @@ export default function Details() {
           {company && <Services />}
           <Space h="20" />
 
-          <Title order={2}>Galeria</Title>
+          {/* <Title order={2}>Galeria</Title>
           <Grid>
             <Grid.Col span={4}>
               <Skeleton h={200} />
@@ -48,7 +48,7 @@ export default function Details() {
             <Grid.Col span={4}>
               <Skeleton h={200} />
             </Grid.Col>
-          </Grid>
+          </Grid> */}
         </Stack>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>

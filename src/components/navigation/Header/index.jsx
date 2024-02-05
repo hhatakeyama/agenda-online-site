@@ -30,7 +30,7 @@ import classes from './Header.module.css'
 
 export default function Header() {
   // Hooks
-  const { logout, isAuthenticated, userData } = useAuth()
+  const { isAuthenticated, isValidating, logout, userData } = useAuth()
   const { openCartMenu, schedule, setOpenCartMenu } = useSchedule()
   const pathname = usePathname()
 
@@ -80,8 +80,7 @@ export default function Header() {
                   onClose={() => setOpenUserMenu(false)}
                   onOpen={() => setOpenUserMenu(true)}
                   withinPortal
-                  styles={{ dropdown: { zIndex: 1001 } }}
-                >
+                  styles={{ dropdown: { zIndex: 1001 } }}>
                   <Menu.Target>
                     <UnstyledButton p={5} className={cx(classes.user, { [classes.userActive]: openUserMenu })}>
                       <Group gap={7}>
@@ -100,7 +99,11 @@ export default function Header() {
                   </Menu.Dropdown>
                 </Menu>
               ) : (
-                <UnstyledButton component="a" href={`/minha-conta/login?redirectCallback=${pathname}`} p={8} className={classes.user}>
+                <UnstyledButton
+                  component="a"
+                  href={isAuthenticated === false && isValidating === false && !userData.id ? `/minha-conta/login?redirectCallback=${pathname}` : null}
+                  p={8}
+                  className={classes.user}>
                   <Text fw={500} size="sm" lh={1} mr={3}>
                     Login
                   </Text>
@@ -115,9 +118,11 @@ export default function Header() {
         </Group>
       </Container>
 
-      <Modal opened={openCartMenu} onClose={() => setOpenCartMenu(false)} title="Agendamento" centered size="xl">
-        <Cart />
-      </Modal>
+      {showCart && (
+        <Modal opened={openCartMenu} onClose={() => setOpenCartMenu(false)} title="Agendamento" centered size="xl">
+          <Cart />
+        </Modal>
+      )}
     </header>
   )
 }

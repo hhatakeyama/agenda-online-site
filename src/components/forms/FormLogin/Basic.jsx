@@ -1,66 +1,100 @@
-import { Alert, Button, Container, LoadingOverlay, Paper, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core'
+import { Alert, Button, Center, Group, LoadingOverlay, Stack, Text, useMantineTheme } from '@mantine/core'
+import { useForm, yupResolver } from '@mantine/form'
+import { useMediaQuery } from '@mantine/hooks'
+import { notifications } from '@mantine/notifications'
+import { useSearchParams } from 'next/navigation'
 import React, { useState } from 'react'
 
 import { useAuth } from '@/providers/AuthProvider'
+import { Yup } from '@/utils'
 
-export default function Basic({ onForgotPassword, onSubmit }) {
+import * as Fields from './Fields'
+
+export default function Basic({ showRegisterButton, onForgotPassword }) {
   // Hooks
-  const { isValidating } = useAuth()
+  const { isValidating, login } = useAuth()
+  const params = useSearchParams()
+  const theme = useMantineTheme()
+  const isXs = useMediaQuery(`(max-width: ${theme.breakpoints.xs}px)`)
+  
+  // Constants
+  const redirectCallback = params.get('redirectCallback')
+  const registerUrl = `/minha-conta/cadastro${redirectCallback ? `?redirectCallback=${redirectCallback}` : ''}`
 
   // States
   const [error, setError] = useState(null)
-  const [credentials, setCredentials] = useState({
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Constants
+  const initialValues = {
     email: '',
-    password: ''
+    password: '',
+  }
+
+  const schema = Yup.object().shape({
+    email: Yup.string().email().required(),
+    password: Yup.string().required(),
+  })
+
+  // Mantine form
+  const form = useForm({
+    initialValues,
+    validate: yupResolver(schema),
+    validateInputOnBlur: true,
+    validateInputOnChange: true
   })
 
   // Actions
-  const handleSubmit = async () => {
+  const handleSubmit = async (newValues) => {
     setError(null)
-    const response = await onSubmit?.(credentials)
-    if (response?.error) {
-      setError(response.error)
+    if (form.isValid() && form.isDirty()) {
+      setIsSubmitting(true)
+      await login(newValues)
+        .then(() => {
+          notifications.show({
+            title: 'Sucesso',
+            message: 'Login realizado com sucesso!',
+            color: 'green'
+          })
+        })
+        .catch(error => {
+          setError(error?.response?.data?.error)
+        })
+        .finally(() => setIsSubmitting(false))
     }
   }
 
   return (
-    <Container size="xl" my={40} style={{ maxWidth: '400px', width: '100%' }}>
-      <Title ta="center">
-        Bem-vindo(a)!
-      </Title>
-      <Text c="dimmed" fz="sm" ta="center">
-        Faça seu login abaixo.
-      </Text>
+    <form onSubmit={form.onSubmit(handleSubmit)} style={{ position: 'relative' }}>
+      <LoadingOverlay visible={isValidating} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+      <Stack gap={5}>
+        <Fields.EmailField inputProps={{ ...form.getInputProps('email'), required: true, disabled: isSubmitting }} />
+        <Fields.PasswordField inputProps={{ ...form.getInputProps('password'), required: true, disabled: isSubmitting }} />
+        {/* <Group justify="space-between" mt="lg" style={{ display: 'none' }}>
+          <Anchor component="button" size="sm" onClick={onForgotPassword}>
+            Esqueceu a senha?
+          </Anchor>
+        </Group> */}
 
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md" pos="relative">
-        <LoadingOverlay visible={isValidating} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
-        <Stack>
-          <TextInput
-            label="E-mail"
-            placeholder="Seu e-mail"
-            value={credentials.email}
-            onChange={e => setCredentials({ ...credentials, email: e.target.value })}
-            required
-          />
-          <PasswordInput
-            label="Senha"
-            placeholder="Sua senha"
-            value={credentials.password}
-            onChange={e => setCredentials({ ...credentials, password: e.target.value })}
-            required
-          />
-          {/* <Group justify="space-between" mt="lg" style={{ display: 'none' }}>
-            <Anchor component="button" size="sm" onClick={onForgotPassword}>
-              Esqueceu a senha?
-            </Anchor>
-          </Group> */}
+        {!!error && <Alert color="red" title="Erro">{error}</Alert>}
 
-          {!!error && (
-            <Alert color="red" title="Erro">{error}</Alert>
-          )}
-          <Button type="submit" fullWidth onClick={handleSubmit}>Login</Button>
-        </Stack>
-      </Paper>
-    </Container>
+        <Group mt="sm" justify="center">
+          <Button
+            type="submit"
+            color="green"
+            fullWidth={!!isXs}
+            disabled={!form.isValid() || !form.isDirty()}
+            loading={isSubmitting}>
+            Login
+          </Button>
+        </Group>
+
+        {showRegisterButton && (
+          <Center>
+            <Text size="sm" c="orange" component="a" href={registerUrl}>ou cadastre-se</Text>
+          </Center>
+        )}
+      </Stack>
+    </form>
   )
 }

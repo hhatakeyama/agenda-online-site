@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Center, Divider, Grid, Group, Modal, Paper, Stack, Stepper, Text, useMantineTheme } from '@mantine/core'
+import { Alert, Box, Button, Center, Container, Divider, Grid, Group, Modal, Paper, Stack, Stepper, Text, Title, useMantineTheme } from '@mantine/core'
 import { DatePicker } from '@mantine/dates'
 import { useMediaQuery } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
@@ -6,7 +6,7 @@ import { IconAlertCircle, IconCheck } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
-import { FormLogin } from '@/components/forms'
+import { FormLogin, FormUser } from '@/components/forms'
 import { useAuth } from '@/providers/AuthProvider'
 import { useOrganization } from '@/providers/OrganizationProvider'
 import { useSchedule } from '@/providers/ScheduleProvider'
@@ -37,6 +37,7 @@ export default function Cart() {
   })
 
   // States
+  const [register, setRegister] = useState(false)
   const [step, setStep] = useState(0)
   const [openSelectEmployees, setOpenSelectEmployees] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,6 +47,7 @@ export default function Cart() {
 
   const hourList = generateHourList(schedule.date, dayOfWeek, smallestDuration, unavailableHours) || [] // Mount available hour list
   const canSubmit = schedule.date && schedule.start_time && schedule.items.length > 0
+  const availableHourList = hourList.filter(hour => verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour))
 
   // Actions
   const handleSubmit = async () => {
@@ -119,9 +121,9 @@ export default function Cart() {
                 {schedule.date && (
                   <Stack>
                     <Text fw={700}>Horários disponíveis</Text>
-                    {hourList.length > 0 ? (
+                    {availableHourList.length > 0 ? (
                       <Grid gutter={10}>
-                        {hourList.filter(hour => verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour)).map(hour => (
+                        {availableHourList.map(hour => (
                           <Grid.Col key={hour} span={{ base: 3, md: 2 }}>
                             <Button
                               color="orange"
@@ -171,9 +173,47 @@ export default function Cart() {
             </Group>
           </Stack>
         </Stepper.Step>
-        <Stepper.Step label="Login" description="Autenticação" icon={isAuthenticated ? <IconCheck /> : null} disabled={!canSubmit || isAuthenticated}>
-          <FormLogin.Basic onSubmit={login} />
-        </Stepper.Step>
+        <Stepper.Step label="Autenticação" description="Login/Cadastro" icon={isAuthenticated ? <IconCheck /> : null} disabled={!canSubmit || isAuthenticated}>
+          <Container size="xl" style={{ maxWidth: '400px', width: '100%' }}>
+            <Paper withBorder shadow="md" p={30} mb={30} radius="md" pos="relative">
+              {register ? (
+                <Stack>
+                  <Title order={3} ta="center">
+                    Cadastro
+                  </Title>
+                  <Text c="dimmed" fz="sm" ta="center">
+                    Preencha os campos abaixo para se cadastrar.
+                  </Text>
+                  <FormUser.Basic />
+                  <Center>
+                    <Text size="sm" c="orange" component="a" onClick={() => setRegister(false)} style={{ cursor: 'pointer' }}>
+                      já tenho login
+                    </Text>
+                  </Center>
+
+                  {/* <Divider label="ou cadastre-se com" labelPosition="center" />
+
+                  <FormUser.SocialLogin /> */}
+                </Stack>
+              ) : (
+                <Stack>
+                  <Title order={3} ta="center">
+                    Login
+                  </Title>
+                  <Text c="dimmed" fz="sm" ta="center">
+                    Faça seu login abaixo.
+                  </Text>
+                  <FormLogin.Basic onSubmit={login} />
+                  <Center>
+                    <Text size="sm" c="orange" component="a" onClick={() => setRegister(true)} style={{ cursor: 'pointer' }}>
+                      ou cadastre-se
+                    </Text>
+                  </Center>
+                </Stack>
+              )}
+            </Paper>
+          </Container>
+        </Stepper.Step >
         <Stepper.Step label="Resumo" description="Confirmação" disabled={!canSubmit || !isAuthenticated}>
           <Stack>
             <Box>
@@ -217,9 +257,9 @@ export default function Cart() {
               <Text>Logo enviaremos um e-mail com a confirmação de agendamento para o e-mail cadastrado.</Text>
               <Text>Antes do dia do serviço estaremos enviando um SMS para confirmar seu agendamento.</Text>
             </Box>
-            
+
             <Divider />
-            
+
             {true && (
               <Stack>
                 <Text size="xl" fw={700}>Instruções</Text>
@@ -235,7 +275,7 @@ export default function Cart() {
             </Group>
           </Stack>
         </Stepper.Completed>
-      </Stepper>
+      </Stepper >
 
       <Modal opened={openSelectEmployees !== null} onClose={() => setOpenSelectEmployees(null)} title="Selecionar Colaborador" centered size="xl">
         <EmployeesSelector scheduleItem={openSelectEmployees} onChange={handleSelectEmployee} />
