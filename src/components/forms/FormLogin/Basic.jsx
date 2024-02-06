@@ -50,16 +50,22 @@ export default function Basic({ showRegisterButton, onForgotPassword }) {
     if (form.isValid() && form.isDirty()) {
       setIsSubmitting(true)
       await login(newValues)
-        .then(() => {
-          notifications.show({
-            title: 'Sucesso',
-            message: 'Login realizado com sucesso!',
-            color: 'green'
-          })
+        .then(response => {
+          if (response.error) {
+            notifications.show({
+              title: 'Erro',
+              message: response?.error || 'E-mail ou senha errados.',
+              color: 'red'
+            })
+          } else {
+            notifications.show({
+              title: 'Sucesso',
+              message: 'Login realizado com sucesso!',
+              color: 'green'
+            })
+          }
         })
-        .catch(error => {
-          setError(error?.response?.data?.error)
-        })
+        .catch(() => setError('Houve um erro no login. Tente novamente mais tarde'))
         .finally(() => setIsSubmitting(false))
     }
   }
