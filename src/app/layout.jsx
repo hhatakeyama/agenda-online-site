@@ -3,8 +3,11 @@ import '@mantine/notifications/styles.css'
 
 import { ColorSchemeScript } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
+import { Cairo } from 'next/font/google'
 
 import Providers from './Providers'
+
+const cairo = Cairo({ subsets: ['latin']})
 
 export const metadata = {
   title: 'Skedyou',
@@ -16,11 +19,8 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <ColorSchemeScript />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet" />
       </head>
-      <body>
+      <body className={cairo.className}>
         <Providers>
           <Notifications position="top-right" autoClose={10000} zIndex={10000} top={95} />
           {children}
