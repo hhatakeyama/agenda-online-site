@@ -123,6 +123,20 @@ export function parseMinutes(time) {
   return hoursToMinutes({ hours: timeHour, minutes: timeMinute })
 }
 
+export function generateUnavailableHourInterval(startTime, endTime, interval) {
+  const hourList = []
+  if (startTime && endTime && interval) {
+    const startTimeMinutes = parseMinutes(startTime)
+    const endTimeMinutes = parseMinutes(endTime)
+    for (var index = startTimeMinutes; index < endTimeMinutes; index = index + interval) {
+      // const addHour = minutesToHours(index)
+      hourList.push(index)
+    }
+  }
+
+  return hourList
+}
+
 export function generateHourInterval(date, startTime, endTime, interval, unavailable) {
   // Check today min hour to display
   const today = new Date()

@@ -1,0 +1,8 @@
+.scheduleItem {
+  border-bottom: 1px solid #999999;
+  padding: 5px;
+
+  &:hover {
+    background-color: #EEEEEE;
+  }
+}

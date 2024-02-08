@@ -1,18 +1,19 @@
-import { Alert, Box, Button, Center, Container, Divider, Grid, Group, Modal, Paper, Stack, Stepper, Text, Title, useMantineTheme } from '@mantine/core'
+import { Alert, Box, Button, Center, Container, Divider, Grid, Group, LoadingOverlay, Modal, Paper, Stack, Stepper, Text, Title, useMantineTheme } from '@mantine/core'
 import { DatePicker } from '@mantine/dates'
 import { useMediaQuery } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { IconAlertCircle, IconCheck } from '@tabler/icons-react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 import { FormLogin, FormUser } from '@/components/forms'
+import { useFetch } from '@/hooks'
 import { useAuth } from '@/providers/AuthProvider'
 import { useOrganization } from '@/providers/OrganizationProvider'
 import { useSchedule } from '@/providers/ScheduleProvider'
 import { api } from '@/utils'
 import { currencyValue } from '@/utils/converter'
-import { dateToHuman, generateHourList, parseMinutes, verifyAvailableHour } from '@/utils/dateFormatter'
+import { dateToHuman, generateHourList, generateUnavailableHourInterval, parseMinutes, verifyAvailableHour } from '@/utils/dateFormatter'
 
 import EmployeesSelector from './EmployeesSelector'
 import ScheduleItem from './ScheduleItem'
@@ -22,6 +23,7 @@ export default function Cart() {
   const theme = useMantineTheme()
   const router = useRouter()
   const isXs = useMediaQuery(`(max-width: ${theme.breakpoints.xs}px)`)
+  const { organizationSlug } = useParams()
   const { isAuthenticated, login, userData } = useAuth()
   const { company } = useOrganization()
   const { schedule, selectedServices, smallestDuration, handleChangeSchedule, handleChangeScheduleItem } = useSchedule()
@@ -35,6 +37,7 @@ export default function Cart() {
     total += Number(item.price)
     totalDuration += Number(parseMinutes(item.duration))
   })
+  const canSubmit = schedule.date && schedule.start_time && schedule.items.length > 0
 
   // States
   const [register, setRegister] = useState(false)
@@ -42,11 +45,25 @@ export default function Cart() {
   const [openSelectEmployees, setOpenSelectEmployees] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dayOfWeek, setDayOfWeek] = useState(todayDayOfWeek)
-  // const [unavailableDates, setUnavailableDates] = useState([]) // TODO: List of unavailable dateList
-  const [unavailableHours, setUnavailableHours] = useState([]) // TODO: List of unavailable hourList in minutes. Get when date change
 
+  // Fetch
+  const { data, isValidating } = useFetch([
+    organizationSlug && company?.id && selectedServices ? `/site/schedules/unavailables/` : null,
+    {
+      organization: organizationSlug,
+      company: company?.id,
+      date: schedule?.date?.toISOString(),
+      services: [selectedServices?.map(item => item.id)]
+    }
+  ])
+  const unavailableGeneral = data?.data?.general || []
+  const unavailableHours = unavailableGeneral.flatMap(item => {
+    const hourList = generateUnavailableHourInterval(item.start_time, item.end_time, item.duration)
+    console.log(hourList)
+    return hourList
+  })
+  console.log(unavailableHours)
   const hourList = generateHourList(schedule.date, dayOfWeek, smallestDuration, unavailableHours) || [] // Mount available hour list
-  const canSubmit = schedule.date && schedule.start_time && schedule.items.length > 0
   const availableHourList = hourList.filter(hour => verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour))
 
   // Actions
@@ -79,10 +96,6 @@ export default function Cart() {
   const handleChangeDate = newDate => {
     handleChangeSchedule({ date: newDate, start_time: null })
     const selectedDayOfWeek = company.days_of_weeks?.find?.(item => Number(item.day_of_week) === newDate.getDay())
-
-    // TODO: fetch unavailable hours from database?
-    setUnavailableHours([])
-
     setDayOfWeek(selectedDayOfWeek)
   }
 
@@ -118,6 +131,7 @@ export default function Cart() {
                 </Stack>
               </Grid.Col>
               <Grid.Col span={{ base: 12, xs: 6, sm: 7 }}>
+                <LoadingOverlay visible={isValidating} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
                 {schedule.date && (
                   <Stack>
                     <Text fw={700}>Horários disponíveis</Text>
