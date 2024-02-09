@@ -14,14 +14,15 @@ function useProvideSchedule() {
   const today = new Date()
   const storageSchedule = getStorage('schedule')
   const storageServices = getStorage('services')
-
-  // States
-  const [openCartMenu, setOpenCartMenu] = useState(false)
-  const [schedule, setSchedule] = useState(storageSchedule || {
+  const defaultSchedule = {
     date: today,
     start_time: '00:00',
     items: [],
-  })
+  }
+
+  // States
+  const [openCartMenu, setOpenCartMenu] = useState(false)
+  const [schedule, setSchedule] = useState(storageSchedule || defaultSchedule)
   const [selectedServices, setSelectedServices] = useState(storageServices || [])
   const [smallestDuration, setSmallestDuration] = useState('00:30')
 
@@ -60,7 +61,7 @@ function useProvideSchedule() {
       setSchedule(prevState => ({ ...prevState, items: newItems }))
     } else {
       const newItems = schedule.items.map(item => ({
-        ...item, start_time: '00:00'
+        ...item, start_time: '', end_time: ''
       }))
       setSchedule(prevState => ({ ...prevState, items: newItems }))
     }
@@ -69,6 +70,12 @@ function useProvideSchedule() {
   const handleChangeScheduleItem = (itemIndex, newValue) => {
     schedule.items[itemIndex] = { ...schedule.items[itemIndex], ...newValue }
     setSchedule(prevState => ({ ...prevState, items: [...schedule.items] }))
+  }
+
+  const handleClearSchedule = () => {
+    setSchedule(defaultSchedule)
+    setSelectedServices([])
+    setStorage('services', [])
   }
 
   // Effects
@@ -99,6 +106,7 @@ function useProvideSchedule() {
     handleAddRemoveService,
     handleChangeSchedule,
     handleChangeScheduleItem,
+    handleClearSchedule,
   }
 }
 

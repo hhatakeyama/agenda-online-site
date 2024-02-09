@@ -26,7 +26,7 @@ export default function Cart() {
   const { organizationSlug } = useParams()
   const { isAuthenticated, login, userData } = useAuth()
   const { company } = useOrganization()
-  const { schedule, selectedServices, smallestDuration, handleChangeSchedule, handleChangeScheduleItem } = useSchedule()
+  const { schedule, selectedServices, smallestDuration, handleChangeSchedule, handleChangeScheduleItem, handleClearSchedule } = useSchedule()
 
   // Constants
   const today = new Date()
@@ -48,21 +48,13 @@ export default function Cart() {
 
   // Fetch
   const { data, isValidating } = useFetch([
-    organizationSlug && company?.id && selectedServices ? `/site/schedules/unavailables/` : null,
-    {
-      organization: organizationSlug,
-      company: company?.id,
-      date: schedule?.date?.toISOString(),
-      services: [selectedServices?.map(item => item.id)]
-    }
+    organizationSlug && company?.id && selectedServices && schedule.date ? `/site/schedules/unavailables/` : null,
+    { company: company?.id, date: schedule.date ? new Date(schedule.date).toISOString() : today }
   ])
   const unavailableGeneral = data?.data?.general || []
-  const unavailableHours = unavailableGeneral.flatMap(item => {
-    const hourList = generateUnavailableHourInterval(item.start_time, item.end_time, item.duration)
-    console.log(hourList)
-    return hourList
-  })
-  console.log(unavailableHours)
+  const unavailableHours = unavailableGeneral.flatMap(item =>
+    generateUnavailableHourInterval(item.start_time, item.end_time, smallestDuration)
+  )
   const hourList = generateHourList(schedule.date, dayOfWeek, smallestDuration, unavailableHours) || [] // Mount available hour list
   const availableHourList = hourList.filter(hour => verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour))
 
@@ -81,7 +73,10 @@ export default function Cart() {
         date: schedule.date.toISOString(),
         items: newItems
       })
-      .then(() => setStep(3))
+      .then(() => {
+        handleClearSchedule()
+        setStep(3)
+      })
       .catch(error =>
         notifications.show({
           title: 'Erro',
@@ -94,7 +89,7 @@ export default function Cart() {
   }
 
   const handleChangeDate = newDate => {
-    handleChangeSchedule({ date: newDate, start_time: null })
+    handleChangeSchedule({ date: newDate, start_time: null, end_time: null })
     const selectedDayOfWeek = company.days_of_weeks?.find?.(item => Number(item.day_of_week) === newDate.getDay())
     setDayOfWeek(selectedDayOfWeek)
   }
@@ -112,7 +107,7 @@ export default function Cart() {
   return (
     <>
       <Stepper color="orange" active={step} onStepClick={setStep}>
-        <Stepper.Step label="Agendamento" description="Serviços">
+        <Stepper.Step label="Agendamento" description="Serviços" disabled={step === 3}>
           <Stack pos="relative">
             <Grid>
               <Grid.Col span={{ base: 12, xs: 6, sm: 5 }}>
@@ -187,7 +182,7 @@ export default function Cart() {
             </Group>
           </Stack>
         </Stepper.Step>
-        <Stepper.Step label="Autenticação" description="Login/Cadastro" icon={isAuthenticated ? <IconCheck /> : null} disabled={!canSubmit || isAuthenticated}>
+        <Stepper.Step label="Autenticação" description="Login/Cadastro" icon={isAuthenticated ? <IconCheck /> : null} disabled={!canSubmit || isAuthenticated || step === 3}>
           <Container size="xl" style={{ maxWidth: '400px', width: '100%' }}>
             <Paper withBorder shadow="md" p={30} mb={30} radius="md" pos="relative">
               {register ? (
@@ -228,11 +223,13 @@ export default function Cart() {
             </Paper>
           </Container>
         </Stepper.Step >
-        <Stepper.Step label="Resumo" description="Confirmação" disabled={!canSubmit || !isAuthenticated}>
+        <Stepper.Step label="Resumo" description="Confirmação" disabled={!canSubmit || !isAuthenticated || step === 3}>
           <Stack>
             <Box>
               <Text size="lg"><strong>Data</strong>: {dateToHuman(schedule.date, 'date')}</Text>
-              <Text size="lg"><strong>Hora</strong>: {schedule.items[0].start_time} - {schedule.items[schedule.items.length - 1].end_time} ({totalDuration}min)</Text>
+              {schedule.items?.[0] && (
+                <Text size="lg"><strong>Hora</strong>: {schedule.items[0].start_time} - {schedule.items[schedule.items.length - 1].end_time} ({totalDuration}min)</Text>
+              )}
               <Text>
                 <strong>Local</strong>: {company.name}<br />{company.address}, {company.district}, {company.city.name}/{company.state}
               </Text>

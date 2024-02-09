@@ -94,6 +94,7 @@ export default function Header() {
                   </Menu.Target>
                   <Menu.Dropdown>
                     <Menu.Item component="a" href="/minha-conta">Minha Conta</Menu.Item>
+                    <Menu.Item component="a" href="/minha-conta/perfil">Perfil</Menu.Item>
                     <Menu.Item component="a" href="/minha-conta/agendamentos">Meus agendamentos</Menu.Item>
                     <Menu.Item onClick={logout}>Logout</Menu.Item>
                   </Menu.Dropdown>

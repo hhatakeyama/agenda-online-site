@@ -128,8 +128,8 @@ export function generateUnavailableHourInterval(startTime, endTime, interval) {
   if (startTime && endTime && interval) {
     const startTimeMinutes = parseMinutes(startTime)
     const endTimeMinutes = parseMinutes(endTime)
-    for (var index = startTimeMinutes; index < endTimeMinutes; index = index + interval) {
-      // const addHour = minutesToHours(index)
+    const intervalMinutes = parseMinutes(interval)
+    for (var index = startTimeMinutes; index < endTimeMinutes; index += intervalMinutes) {
       hourList.push(index)
     }
   }
