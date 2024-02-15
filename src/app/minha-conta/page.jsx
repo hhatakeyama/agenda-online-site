@@ -1,15 +1,19 @@
 'use client'
 
-import { Stack, Text } from '@mantine/core'
+import { Group, Stack, Title } from '@mantine/core'
 
+import ClientMenu from '@/components/navigation/ClientMenu'
 import guardAccount from '@/guards/AccountGuard'
 
 function MyAccount() {
   return (
-    <Stack>
-      <Text c="orange" size="lg" fw={700}>Minha conta</Text>
-      
-    </Stack>
+    <Group align="flex-start" wrap="nowrap">
+      <ClientMenu />
+
+      <Stack w="100%">
+        <Title c="orange" order={1} fw={700}>Minha conta</Title>
+      </Stack>
+    </Group>
   )
 }
 

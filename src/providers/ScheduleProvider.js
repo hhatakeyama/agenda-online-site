@@ -61,7 +61,7 @@ function useProvideSchedule() {
       setSchedule(prevState => ({ ...prevState, items: newItems }))
     } else {
       const newItems = schedule.items.map(item => ({
-        ...item, start_time: '', end_time: ''
+        ...item, start_time: '', end_time: '', employee_id: null
       }))
       setSchedule(prevState => ({ ...prevState, items: newItems }))
     }

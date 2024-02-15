@@ -25,7 +25,7 @@ function useProvideAuth() {
   const [isValidating, setIsValidating] = useState(null)
 
   // Fetch
-  const { data: userData, isValidating: userIsValidating } = useFetch([
+  const { data: userData, isValidating: userIsValidating, mutate: userMutate } = useFetch([
     !!isAuthenticated ? '/me/' : null
   ])
 
@@ -79,6 +79,23 @@ function useProvideAuth() {
           return { error: 'E-mail ou senha inválidos' }
         }
       })
+      .catch(error => {
+        return { error: error?.response?.data?.message || 'Ocorreu um erro inesperado. Tente novamente mais tarde' }
+      })
+      .finally(() => setLoading(false))
+  }
+
+  const updateUser = async (newValues) => {
+    setLoading(true)
+    return await api
+      .patch(`/site/clients/update/${userData?.data?.id}/`, {
+        name: newValues.name,
+        email: newValues.email,
+        picture: newValues.picture,
+        ...(newValues.password ? { password: newValues.password } : {}),
+        ...(newValues.password ? { password_confirmation: newValues.confirmPassword } : {}),
+      })
+      .then(() => userMutate())
       .catch(error => {
         return { error: error?.response?.data?.message || 'Ocorreu um erro inesperado. Tente novamente mais tarde' }
       })
@@ -151,6 +168,7 @@ function useProvideAuth() {
     forgotPassword,
     resetPassword,
     register,
+    updateUser,
     verifyToken,
     isAuthenticated,
     isValidating,

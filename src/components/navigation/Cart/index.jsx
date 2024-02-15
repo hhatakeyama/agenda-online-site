@@ -160,6 +160,7 @@ export default function Cart() {
                 <ScheduleItem
                   key={`scheduleItem-${item.service_id}`}
                   editValues={item}
+                  showChangeButton={schedule.start_time}
                   onChangeEmployee={() => setOpenSelectEmployees({ index, item })}
                 />
               ))}
@@ -289,7 +290,11 @@ export default function Cart() {
       </Stepper >
 
       <Modal opened={openSelectEmployees !== null} onClose={() => setOpenSelectEmployees(null)} title="Selecionar Colaborador" centered size="xl">
-        <EmployeesSelector scheduleItem={openSelectEmployees} onChange={handleSelectEmployee} />
+        <EmployeesSelector
+          scheduleItem={openSelectEmployees}
+          unavailableEmployees={data?.data?.employees || []}
+          onChange={handleSelectEmployee}
+        />
       </Modal>
     </>
   )

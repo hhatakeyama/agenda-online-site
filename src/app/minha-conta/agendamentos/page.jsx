@@ -1,6 +1,6 @@
 'use client'
 
-import { Center, Group, Pagination, Paper, Stack, Text, Title } from '@mantine/core'
+import { Alert, Center, Group, Pagination, Paper, Stack, Text, Title } from '@mantine/core'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
@@ -21,7 +21,7 @@ function Schedules() {
 
   // States
   const [page, setPage] = useState(params.get('page') || 1)
-  const [pageSize] = useState(params.get('page_size') || 20)
+  const [pageSize] = useState(params.get('page_size') || 5)
 
   // Fetch
   const { data } = useFetch([userData?.id ? `/site/schedules/client/${userData.id}` : null, { page, page_size: pageSize }])
@@ -33,12 +33,19 @@ function Schedules() {
 
       <Stack w="100%">
         <Title c="orange" order={1} fw={700}>Agendamentos</Title>
+        {pagination?.data?.length === 0 && (
+          <Alert color="orange" title="Sem agendamentos">
+            Você ainda não fez nenhum agendamento.<br />
+            Acesse o site de nossos parceiros e faça seu primeiro agendamento com a <strong>Skedyou</strong>!
+          </Alert>
+        )}
         {pagination?.data?.map(schedule => {
           let total = 0
           return (
             <Paper withBorder key={schedule.id} p={10}>
               <Stack gap={5}>
-                <Text size="lg" fw={700}>{dateToHuman(`${schedule.date}T03:00:00Z`, 'date')} - {schedule.company.name}</Text>
+                <Text size="lg" fw={700}>{dateToHuman(`${schedule.date}T03:00:00Z`, 'date')}</Text>
+                <Text size="md" fw={700}>{schedule.company.organization.tradingName} - {schedule.company.name}</Text>
                 <Text><strong>Local</strong>: {schedule.company.address}</Text>
 
                 {schedule.schedule_items?.map(scheduleItem => {

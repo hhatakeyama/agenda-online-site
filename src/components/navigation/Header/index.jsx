@@ -35,6 +35,7 @@ export default function Header() {
   const pathname = usePathname()
 
   // Constants
+  const srcPicture = userData?.picture?.indexOf('http') !== -1 ? userData?.picture : `${process.env.NEXT_PUBLIC_API_DOMAIN}/storage/clients/original-${userData?.picture}`
   const showCart = pathname.indexOf('/e/') !== -1
   const menu = [
     { link: '/category/barbearias', label: 'Barbearias' },
@@ -84,7 +85,7 @@ export default function Header() {
                   <Menu.Target>
                     <UnstyledButton p={5} className={cx(classes.user, { [classes.userActive]: openUserMenu })}>
                       <Group gap={7}>
-                        <Avatar color="white" src={userData?.image} alt={userData?.name} radius="xl" size={22} />
+                        <Avatar color="white" src={srcPicture} alt={userData?.name} radius="xl" size={22} />
                         <Text fw={500} size="sm" lh={1} mr={3}>
                           {userData?.name}
                         </Text>
