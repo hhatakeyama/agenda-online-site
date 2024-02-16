@@ -49,7 +49,11 @@ export default function Cart() {
   // Fetch
   const { data, isValidating } = useFetch([
     organizationSlug && company?.id && selectedServices && schedule.date ? `/site/schedules/unavailables/` : null,
-    { company: company?.id, date: schedule.date ? new Date(schedule.date).toISOString() : today }
+    {
+      company: company?.id,
+      date: schedule.date ? new Date(schedule.date).toISOString() : today,
+      services: selectedServices.flatMap(item => item.id)
+    }
   ])
   const unavailableGeneral = data?.data?.general || []
   const unavailableHours = unavailableGeneral.flatMap(item =>
