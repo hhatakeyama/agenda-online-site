@@ -74,6 +74,13 @@ export function datter(input, options = defaultOptions) {
 
 export const daysOfWeekString = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"]
 
+export const dateToDatabase = (date) => {
+  const year = date.getFullYear()
+  const month = date.getMonth() < 10 ? `0${date.getMonth() + 1}` : date.getMonth()
+  const day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate()
+  return `${year}-${month}-${day}`
+}
+
 export const dateToHuman = (date, type = 'datetime') => {
   const dateObject = new Date(date)
   let format = {

@@ -13,7 +13,7 @@ import { useOrganization } from '@/providers/OrganizationProvider'
 import { useSchedule } from '@/providers/ScheduleProvider'
 import { api } from '@/utils'
 import { currencyValue } from '@/utils/converter'
-import { dateToHuman, generateHourList, generateUnavailableHourInterval, parseMinutes, verifyAvailableHour } from '@/utils/dateFormatter'
+import { dateToDatabase, dateToHuman, generateHourList, generateUnavailableHourInterval, parseMinutes, verifyAvailableHour } from '@/utils/dateFormatter'
 
 import EmployeesSelector from './EmployeesSelector'
 import ScheduleItem from './ScheduleItem'
@@ -29,15 +29,10 @@ export default function Cart() {
   const { schedule, selectedServices, smallestDuration, handleChangeSchedule, handleChangeScheduleItem, handleClearSchedule } = useSchedule()
 
   // Constants
-  const today = new Date()
-  const todayDayOfWeek = company.days_of_weeks?.find?.(item => Number(item.day_of_week) === schedule.date?.getDay?.())
   let total = 0
   let totalDuration = 0
-  selectedServices.map(item => {
-    total += Number(item.price)
-    totalDuration += Number(parseMinutes(item.duration))
-  })
-  const canSubmit = schedule.date && schedule.start_time && schedule.items.length > 0
+  const today = new Date()
+  const todayDayOfWeek = company.days_of_weeks?.find?.(item => Number(item.day_of_week) === schedule.date?.getDay?.())
 
   // States
   const [register, setRegister] = useState(false)
@@ -55,12 +50,21 @@ export default function Cart() {
       services: selectedServices.flatMap(item => item.id)
     }
   ])
-  const unavailableGeneral = data?.data?.general || []
-  const unavailableHours = unavailableGeneral.flatMap(item =>
-    generateUnavailableHourInterval(item.start_time, item.end_time, smallestDuration)
-  )
+  const unavailablesByService = data?.data || []
+  selectedServices.map(item => {
+    total += Number(item.price)
+    totalDuration += Number(parseMinutes(item.duration))
+  })
+  const unavailableHours = unavailablesByService.flatMap(unavailableByService => {
+    const serviceFilteredScheduleItems = unavailableByService.schedule_items.filter(item => item.schedule.date === dateToDatabase(schedule.date))
+    const serviceUnavailables = serviceFilteredScheduleItems.flatMap(item => {
+      return generateUnavailableHourInterval(item.start_time, item.end_time, smallestDuration)
+    })
+    return serviceUnavailables
+  })
   const hourList = generateHourList(schedule.date, dayOfWeek, smallestDuration, unavailableHours) || [] // Mount available hour list
   const availableHourList = hourList.filter(hour => verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour))
+  const canSubmit = schedule.date && schedule.start_time && schedule.items.length > 0
 
   // Actions
   const handleSubmit = async () => {

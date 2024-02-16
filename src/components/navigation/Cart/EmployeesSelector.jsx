@@ -14,8 +14,7 @@ export default function Employees({ scheduleItem, onChange }) {
   // Constants
   const service = scheduleItem ? selectedServices.find(item => item.id === scheduleItem.item?.service_id) : {}
   const selectedEmployee = scheduleItem && service ? service.employees?.find?.(item => item.id === scheduleItem.item?.employee_id) : {}
-  const canChooseEmployee = service?.can_choose_employee === 1 || service?.can_choose_employee === "1"
-  const availableEmployees = service?.employees || []
+  const canChooseEmployee = service?.can_choose_employee === 1
 
   // Actions
   const handleChangeEmployee = employee => {
@@ -33,7 +32,7 @@ export default function Employees({ scheduleItem, onChange }) {
             <Text fw={!selectedEmployee ? 700 : 400}>Qualquer colaborador</Text>
           </Group>
         </UnstyledButton>
-        {canChooseEmployee && availableEmployees.map(employee => {
+        {canChooseEmployee && service?.employees?.map?.(employee => {
           const available = true
           return (
             <UnstyledButton onClick={() => available ? handleChangeEmployee(employee) : null} key={employee.id} p="xs" className={available ? classes.employeeSelector : classes.unavailableEmployeeSelector}>
