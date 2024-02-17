@@ -2,8 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-import { getStorage, setStorage } from '@/utils'
-import { minutesToHours, parseMinutes } from '@/utils/dateFormatter'
+import { getStorage, minutesToHours, parseMinutes, setStorage } from '@/utils'
 
 const ScheduleContext = createContext(null)
 
@@ -93,7 +92,7 @@ function useProvideSchedule() {
       }
     })
     setSchedule(prevState => ({ ...prevState, start_time: '', items: newItems }))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedServices])
 
   return {

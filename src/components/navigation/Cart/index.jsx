@@ -1,21 +1,20 @@
-import { Alert, Box, Button, Center, Container, Divider, Grid, Group, LoadingOverlay, Modal, Paper, Stack, Stepper, Text, Title, useMantineTheme } from '@mantine/core'
+import { Box, Button, Center, Container, Divider, Grid, Group, Modal, Paper, Stack, Stepper, Text, Title, useMantineTheme } from '@mantine/core'
 import { DatePicker } from '@mantine/dates'
 import { useMediaQuery } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import { IconAlertCircle, IconCheck } from '@tabler/icons-react'
-import { useParams, useRouter } from 'next/navigation'
+import { IconCheck } from '@tabler/icons-react'
+import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 import { FormLogin, FormUser } from '@/components/forms'
-import { useFetch } from '@/hooks'
 import { useAuth } from '@/providers/AuthProvider'
 import { useOrganization } from '@/providers/OrganizationProvider'
 import { useSchedule } from '@/providers/ScheduleProvider'
-import { api } from '@/utils'
+import { api, dateToHuman, minutesToHours, parseMinutes } from '@/utils'
 import { currencyValue } from '@/utils/converter'
-import { dateToDatabase, dateToHuman, generateHourList, generateUnavailableHourInterval, parseMinutes, verifyAvailableHour } from '@/utils/dateFormatter'
 
 import EmployeesSelector from './EmployeesSelector'
+import HourList from './HourList'
 import ScheduleItem from './ScheduleItem'
 
 export default function Cart() {
@@ -23,16 +22,20 @@ export default function Cart() {
   const theme = useMantineTheme()
   const router = useRouter()
   const isXs = useMediaQuery(`(max-width: ${theme.breakpoints.xs}px)`)
-  const { organizationSlug } = useParams()
   const { isAuthenticated, login, userData } = useAuth()
   const { company } = useOrganization()
-  const { schedule, selectedServices, smallestDuration, handleChangeSchedule, handleChangeScheduleItem, handleClearSchedule } = useSchedule()
+  const { schedule, selectedServices, handleChangeSchedule, handleChangeScheduleItem, handleClearSchedule } = useSchedule()
 
   // Constants
-  let total = 0
-  let totalDuration = 0
   const today = new Date()
   const todayDayOfWeek = company.days_of_weeks?.find?.(item => Number(item.day_of_week) === schedule.date?.getDay?.())
+  const canSubmit = schedule.date && schedule.start_time && schedule.items.length > 0
+  let total = 0
+  let totalDuration = 0
+  selectedServices.map(item => {
+    total += Number(item.price)
+    totalDuration += Number(parseMinutes(item.duration))
+  })
 
   // States
   const [register, setRegister] = useState(false)
@@ -41,34 +44,10 @@ export default function Cart() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dayOfWeek, setDayOfWeek] = useState(todayDayOfWeek)
 
-  // Fetch
-  const { data, isValidating } = useFetch([
-    organizationSlug && company?.id && selectedServices && schedule.date ? `/site/schedules/unavailables/` : null,
-    {
-      company: company?.id,
-      date: schedule.date ? new Date(schedule.date).toISOString() : today,
-      services: selectedServices.flatMap(item => item.id)
-    }
-  ])
-  const unavailablesByService = data?.data || []
-  selectedServices.map(item => {
-    total += Number(item.price)
-    totalDuration += Number(parseMinutes(item.duration))
-  })
-  const unavailableHours = unavailablesByService.flatMap(unavailableByService => {
-    const serviceFilteredScheduleItems = unavailableByService.schedule_items.filter(item => item.schedule.date === dateToDatabase(schedule.date))
-    const serviceUnavailables = serviceFilteredScheduleItems.flatMap(item => {
-      return generateUnavailableHourInterval(item.start_time, item.end_time, smallestDuration)
-    })
-    return serviceUnavailables
-  })
-  const hourList = generateHourList(schedule.date, dayOfWeek, smallestDuration, unavailableHours) || [] // Mount available hour list
-  const availableHourList = hourList.filter(hour => verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour))
-  const canSubmit = schedule.date && schedule.start_time && schedule.items.length > 0
-
   // Actions
   const handleSubmit = async () => {
     setIsSubmitting(true)
+    // TODO: select random employee to service
     const newItems = schedule.items.map(item => {
       // eslint-disable-next-line no-unused-vars
       const { employee, ...restItem } = item
@@ -134,32 +113,7 @@ export default function Cart() {
                 </Stack>
               </Grid.Col>
               <Grid.Col span={{ base: 12, xs: 6, sm: 7 }}>
-                <LoadingOverlay visible={isValidating} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
-                {schedule.date && (
-                  <Stack>
-                    <Text fw={700}>Horários disponíveis</Text>
-                    {availableHourList.length > 0 ? (
-                      <Grid gutter={10}>
-                        {availableHourList.map(hour => (
-                          <Grid.Col key={hour} span={{ base: 3, md: 2 }}>
-                            <Button
-                              color="orange"
-                              variant={schedule.start_time === hour ? "filled" : "outline"}
-                              fullWidth
-                              p={0}
-                              onClick={() => handleChangeSchedule({ start_time: hour })}>
-                              {hour}
-                            </Button>
-                          </Grid.Col>
-                        ))}
-                      </Grid>
-                    ) : (
-                      <Alert variant="light" color="orange" title="Data indisponível" icon={<IconAlertCircle />}>
-                        Nenhum horário disponível para esta data, selecione outra data.
-                      </Alert>
-                    )}
-                  </Stack>
-                )}
+                {schedule.date && <HourList dayOfWeek={dayOfWeek} />}
               </Grid.Col>
             </Grid>
 
@@ -177,7 +131,7 @@ export default function Cart() {
             <Group justify="space-between">
               <Box>
                 <Text size="xl"><strong>Total</strong>: {currencyValue(total)}</Text>
-                <Text size="xl"><strong>Duração</strong>: {totalDuration}min</Text>
+                <Text size="xl"><strong>Duração</strong>: {minutesToHours(totalDuration)}{totalDuration > 59 ? 'h' : 'min'}</Text>
               </Box>
               <Button
                 color="green"
@@ -300,7 +254,7 @@ export default function Cart() {
       <Modal opened={openSelectEmployees !== null} onClose={() => setOpenSelectEmployees(null)} title="Selecionar Colaborador" centered size="xl">
         <EmployeesSelector
           scheduleItem={openSelectEmployees}
-          unavailableEmployees={data?.data?.employees || []}
+          unavailableEmployees={[]}
           onChange={handleSelectEmployee}
         />
       </Modal>

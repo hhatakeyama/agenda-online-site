@@ -6,8 +6,7 @@ import Link from 'next/link'
 import React from 'react'
 
 import { useOrganization } from '@/providers/OrganizationProvider'
-import { contactTypeUrl } from '@/utils'
-import { daysOfWeekString } from '@/utils/dateFormatter'
+import { contactTypeUrl, daysOfWeekString } from '@/utils'
 
 import classes from './Organization.module.css'
 import Services from './Services'
