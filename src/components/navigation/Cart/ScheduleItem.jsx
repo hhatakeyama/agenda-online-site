@@ -28,7 +28,7 @@ export default function ScheduleItem({ editValues, showChangeButton = true, onCh
             <Stack align="center" gap={2}>
               <Title order={4} fw={700} align="center">{service.name || ''}</Title>
               <Divider />
-              <Text fw={700} color="orange">{service.price ? currencyValue(service.price) : ''}</Text>
+              <Text fw={700} c="orange">{service.price ? currencyValue(service.price) : ''}</Text>
               <Text size="sm">Agendado: <strong>{editValues.start_time || '--'} - {editValues.end_time || '--'}</strong></Text>
               <Text size="sm">Duração: <strong>{service.duration || ''}</strong></Text>
             </Stack>
