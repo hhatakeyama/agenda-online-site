@@ -26,7 +26,7 @@ function useProvideAuth() {
 
   // Fetch
   const { data: userData, isValidating: userIsValidating, mutate: userMutate } = useFetch([
-    !!isAuthenticated ? '/me/' : null
+    !!isAuthenticated ? '/site/me/' : null
   ])
 
   // Login with credentials
@@ -105,7 +105,7 @@ function useProvideAuth() {
   // Logout user from API
   const logout = async () => {
     try {
-      await api.post('/logout/')
+      await api.post('/site/logout/')
     } finally {
       removeCookie(cookieTokenString)
       removeStorage('services')
