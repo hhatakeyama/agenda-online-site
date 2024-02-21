@@ -3,18 +3,26 @@ import React from 'react'
 
 import { useAuth } from '@/providers/AuthProvider'
 import { useSchedule } from '@/providers/ScheduleProvider'
+import { parseMinutes } from '@/utils'
 
 import classes from './Cart.module.css'
 
-export default function Employees({ scheduleItem, onChange }) {
+export default function EmployeesSelector({ scheduleItem, unavailables, onChange }) {
   // Hooks
   const { isValidating } = useAuth()
   const { selectedServices } = useSchedule()
-
+  
   // Constants
   const service = scheduleItem ? selectedServices.find(item => item.id === scheduleItem.item?.service_id) : {}
+  const hourUnavailables = unavailables && scheduleItem ? unavailables.filter(item => parseMinutes(item.start_time) === parseMinutes(scheduleItem.item?.start_time)) : []
   const selectedEmployee = scheduleItem && service ? service.employees?.find?.(item => item.id === scheduleItem.item?.employee_id) : {}
   const canChooseEmployee = service?.can_choose_employee === 1
+  const availableEmployees = service?.employees?.filter(employee => {
+    return !hourUnavailables.find(item => {
+      return item.employee_id === employee.id
+    })
+  })
+  const availableEmployeesIds = availableEmployees?.flatMap(item => item.id)
 
   // Actions
   const handleChangeEmployee = employee => {
@@ -33,7 +41,7 @@ export default function Employees({ scheduleItem, onChange }) {
           </Group>
         </UnstyledButton>
         {canChooseEmployee && service?.employees?.map?.(employee => {
-          const available = true
+          const available = availableEmployeesIds.indexOf(employee.id) !== -1
           return (
             <UnstyledButton onClick={() => available ? handleChangeEmployee(employee) : null} key={employee.id} p="xs" className={available ? classes.employeeSelector : classes.unavailableEmployeeSelector}>
               <Group gap="xs">

@@ -66,17 +66,28 @@ export function generateUnavailableHourInterval(startTime, endTime, interval) {
   return hourList
 }
 
+// REVER
+export function generateUnavailableServiceEmployeeHourList(serviceId, employees, smallestDuration, unavailables) {
+  const employeesIds = employees.flatMap(employee => employee.id)
+  const serviceEmployeesUnavailables =
+    unavailables.filter(unavailable => unavailable.service_id === serviceId && employeesIds.indexOf(unavailable.employee_id) !== -1)
+  console.log(serviceEmployeesUnavailables)
+  return serviceEmployeesUnavailables.flatMap(unavailable => {
+    const unavailableHourInterval = generateUnavailableHourInterval(unavailable.start_time, unavailable.end_time, smallestDuration)
+    return unavailableHourInterval.map(hour => ({ service_id: unavailable.service_id, employee_id: unavailable.employee_id, hour }))
+  })
+}
+
 export function generateUnavailableHourList(selectedServices, smallestDuration, unavailables) {
   const unavailableHourList = []
   selectedServices.map(selectedService => {
     const employeesIds = selectedService.employees.flatMap(employee => employee.id)
-    
-    const serviceEmployeesUnavailables =
-      unavailables.filter(unavailable => unavailable.service_id === selectedService.id && employeesIds.indexOf(unavailable.employee_id) !== -1)
-    const serviceEmployeesUnavailableHoursInterval = serviceEmployeesUnavailables.flatMap(unavailable => {
-      return generateUnavailableHourInterval(unavailable.start_time, unavailable.end_time, smallestDuration)
-    })
-  
+
+    const serviceEmployeesUnavailableHoursInterval =
+      unavailables.length > 0 ?
+        generateUnavailableServiceEmployeeHourList(selectedService.id, selectedService.employees, smallestDuration, unavailables).flatMap(item => item.hour) :
+        unavailables
+
     const unavailableHours = []
     serviceEmployeesUnavailableHoursInterval.map(unavailableHour => {
       let countHour = 0

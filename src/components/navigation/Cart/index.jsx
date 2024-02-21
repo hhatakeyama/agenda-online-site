@@ -3,15 +3,17 @@ import { DatePicker } from '@mantine/dates'
 import { useMediaQuery } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { IconCheck } from '@tabler/icons-react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 import { FormLogin, FormUser } from '@/components/forms'
+import { useFetch } from '@/hooks'
 import { useAuth } from '@/providers/AuthProvider'
 import { useOrganization } from '@/providers/OrganizationProvider'
 import { useSchedule } from '@/providers/ScheduleProvider'
-import { api, dateToHuman, minutesToHours, parseMinutes } from '@/utils'
+import { api, dateToHuman, generateUnavailableHourList, minutesToHours, parseMinutes } from '@/utils'
 import { currencyValue } from '@/utils/converter'
+import { generateUnavailableServiceEmployeeHourList } from '@/utils/dateFormatter'
 
 import EmployeesSelector from './EmployeesSelector'
 import HourList from './HourList'
@@ -24,7 +26,8 @@ export default function Cart() {
   const isXs = useMediaQuery(`(max-width: ${theme.breakpoints.xs}px)`)
   const { isAuthenticated, login, userData } = useAuth()
   const { company } = useOrganization()
-  const { schedule, selectedServices, handleChangeSchedule, handleChangeScheduleItem, handleClearSchedule } = useSchedule()
+  const { organizationSlug } = useParams()
+  const { schedule, selectedServices, smallestDuration, handleChangeSchedule, handleChangeScheduleItem, handleClearSchedule } = useSchedule()
 
   // Constants
   const today = new Date()
@@ -44,14 +47,35 @@ export default function Cart() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dayOfWeek, setDayOfWeek] = useState(todayDayOfWeek)
 
+  // Fetch
+  const { data, isValidating } = useFetch([
+    organizationSlug && company?.id && selectedServices && schedule.date ? `/site/schedules/unavailables/` : null,
+    {
+      company: company?.id,
+      date: schedule.date ? new Date(schedule.date).toISOString() : today,
+      services: selectedServices.flatMap(item => item.id),
+      employees: selectedServices.flatMap(selectedService => selectedService.employees.flatMap(employee => employee.id))
+    }
+  ])
+  const unavailables = data?.data || []
+  const unavailableHours = generateUnavailableHourList(selectedServices, smallestDuration, unavailables) || [] // Mount unavailable hour list for each selected service
+
   // Actions
   const handleSubmit = async () => {
     setIsSubmitting(true)
-    // TODO: select random employee to service
     const newItems = schedule.items.map(item => {
-      // eslint-disable-next-line no-unused-vars
-      const { employee, ...restItem } = item
-      return restItem
+      if (!item.employee_id) {
+        const employees = selectedServices.find(service => service.id === item.service_id)?.employees || []
+        const serviceUnavailables = unavailables.filter(scheduleItem => scheduleItem.service_id === item.service_id)
+        const availableEmployees = employees.filter(employee => {
+          return !serviceUnavailables.find(scheduleItem => {
+            return scheduleItem.employee_id === employee.id && parseMinutes(scheduleItem.start_time) === parseMinutes(item.start_time)
+          })
+        })
+        const random = Math.floor(Math.random() * availableEmployees.length)
+        return { ...item, employee_id: availableEmployees[random].id }
+      }
+      return item
     })
     return await api
       .post(`/site/schedules/create/`, {
@@ -73,6 +97,7 @@ export default function Cart() {
         })
       )
       .finally(() => setIsSubmitting(false))
+    setIsSubmitting(false)
   }
 
   const handleChangeDate = newDate => {
@@ -113,7 +138,13 @@ export default function Cart() {
                 </Stack>
               </Grid.Col>
               <Grid.Col span={{ base: 12, xs: 6, sm: 7 }}>
-                {schedule.date && <HourList dayOfWeek={dayOfWeek} />}
+                {schedule.date && (
+                  <HourList
+                    dayOfWeek={dayOfWeek}
+                    isValidating={isValidating}
+                    unavailableHours={unavailableHours}
+                  />
+                )}
               </Grid.Col>
             </Grid>
 
@@ -254,7 +285,7 @@ export default function Cart() {
       <Modal opened={openSelectEmployees !== null} onClose={() => setOpenSelectEmployees(null)} title="Selecionar Colaborador" centered size="xl">
         <EmployeesSelector
           scheduleItem={openSelectEmployees}
-          unavailableEmployees={[]}
+          unavailables={unavailables}
           onChange={handleSelectEmployee}
         />
       </Modal>
