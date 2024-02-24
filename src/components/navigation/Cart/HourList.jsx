@@ -3,19 +3,15 @@ import { IconAlertCircle } from '@tabler/icons-react'
 import React from 'react'
 
 import { useSchedule } from '@/providers/ScheduleProvider'
-import { generateHourList, parseMinutes, verifyAvailableHour } from '@/utils'
+import { generateHourList, verifyAvailableHour } from '@/utils'
 
-export default function HourList({ dayOfWeek, isValidating, unavailableHours }) {
+export default function HourList({ dayOfWeek, isValidating, totalDuration, unavailableHours }) {
   // Hooks
-  const { schedule, selectedServices, smallestDuration, handleChangeSchedule } = useSchedule()
-
-  // Constants
-  let totalDuration = 0
-  selectedServices.map(item => totalDuration += Number(parseMinutes(item.duration)))
+  const { schedule, smallestDuration, handleChangeSchedule } = useSchedule()
 
   // Fetch
   const hourList = generateHourList(schedule.date, dayOfWeek, smallestDuration, unavailableHours) || [] // Mount available hour list
-  const availableHourList = hourList.filter(hour => verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour))
+  const availableHourList = hourList.filter(hour => verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour, unavailableHours))
 
   return (
     <>

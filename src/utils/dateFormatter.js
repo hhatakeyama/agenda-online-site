@@ -66,43 +66,44 @@ export function generateUnavailableHourInterval(startTime, endTime, interval) {
   return hourList
 }
 
-// REVER
-export function generateUnavailableServiceEmployeeHourList(serviceId, employees, smallestDuration, unavailables) {
-  const employeesIds = employees.flatMap(employee => employee.id)
-  const serviceEmployeesUnavailables =
-    unavailables.filter(unavailable => unavailable.service_id === serviceId && employeesIds.indexOf(unavailable.employee_id) !== -1)
-  console.log(serviceEmployeesUnavailables)
-  return serviceEmployeesUnavailables.flatMap(unavailable => {
-    const unavailableHourInterval = generateUnavailableHourInterval(unavailable.start_time, unavailable.end_time, smallestDuration)
-    return unavailableHourInterval.map(hour => ({ service_id: unavailable.service_id, employee_id: unavailable.employee_id, hour }))
+export function generateUnavailableEmployeesHourList(employees, smallestDuration, unavailables) {
+  const employeesUnavailable = employees.flatMap(employee => {
+    const serviceEmployeesUnavailables =
+      unavailables.filter(unavailable => unavailable.employee_id === employee.id)
+    return serviceEmployeesUnavailables.flatMap(unavailable => {
+      const unavailableHourInterval = generateUnavailableHourInterval(unavailable.start_time, unavailable.end_time, smallestDuration)
+      return unavailableHourInterval.map(hour => ({ employee_id: unavailable.employee_id, hour }))
+    })
   })
+  return employeesUnavailable
 }
 
 export function generateUnavailableHourList(selectedServices, smallestDuration, unavailables) {
+  if (unavailables.length === 0) return []
+  
   const unavailableHourList = []
   selectedServices.map(selectedService => {
     const employeesIds = selectedService.employees.flatMap(employee => employee.id)
 
     const serviceEmployeesUnavailableHoursInterval =
-      unavailables.length > 0 ?
-        generateUnavailableServiceEmployeeHourList(selectedService.id, selectedService.employees, smallestDuration, unavailables).flatMap(item => item.hour) :
-        unavailables
-
+      generateUnavailableEmployeesHourList(selectedService.employees, smallestDuration, unavailables).flatMap(item => item.hour)
     const unavailableHours = []
     serviceEmployeesUnavailableHoursInterval.map(unavailableHour => {
       let countHour = 0
       serviceEmployeesUnavailableHoursInterval.forEach(unavailable => {
         if (unavailable === unavailableHour) countHour++
       })
-
-      if (countHour < employeesIds.length) serviceEmployeesUnavailableHoursInterval.push(unavailableHour)
-      else if (!unavailableHours.find(item => item === unavailableHour)) unavailableHours.push(unavailableHour)
+      if (countHour === employeesIds.length && !unavailableHours.find(item => item === unavailableHour))
+        unavailableHours.push(unavailableHour)
     })
-    unavailableHourList.push(...unavailableHours)
+    unavailableHours.map(hour => {
+      if (!unavailableHourList.find(item => item === hour)) unavailableHourList.push(hour)
+    })
   })
   return unavailableHourList
 }
 
+// Generate hour interval if hour not unavailable
 export function generateHourInterval(date, startTime, endTime, intervalMinutes, unavailable) {
   const startTimeMinutes = parseMinutes(startTime)
   const endTimeMinutes = parseMinutes(endTime)
@@ -115,7 +116,6 @@ export function generateHourInterval(date, startTime, endTime, intervalMinutes, 
   const hourList = []
   for (var index = startTimeMinutes; index < endTimeMinutes; index = index + intervalMinutes) {
     const addHour = minutesToHours(index)
-    // TODO: verify unavailable
     if (!unavailable.find(item => Number(item) === Number(index)) && index > minTime)
       hourList.push(addHour)
   }
@@ -143,8 +143,10 @@ export function generateHourList(date, dayOfWeek, interval, unavailable = []) {
   return hourList
 }
 
-export function verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour) {
+// Verify in the dayOfWeek start and ent_time available hours, if hour is less than services total duration and unavailableHours not within hour and hour service duration
+export function verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour, unavailableHours) {
   const hourInMinutes = hour ? parseMinutes(hour) : 0
+  const servicesDuration = hourInMinutes + totalDuration
   if (hourList.length > 0) {
     const endTime = dayOfWeek?.end_time ? parseMinutes(dayOfWeek.end_time) - totalDuration : 0
     const startTime2 = dayOfWeek?.start_time_2 ? parseMinutes(dayOfWeek.start_time_2) : 0
@@ -154,6 +156,8 @@ export function verifyAvailableHour(hourList, dayOfWeek, totalDuration, hour) {
     const startTime4 = dayOfWeek?.start_time_4 ? parseMinutes(dayOfWeek.start_time_4) : 0
     const endTime4 = dayOfWeek?.end_time_4 ? parseMinutes(dayOfWeek.end_time_4) - totalDuration : 0
 
+    if (unavailableHours.filter(item => hourInMinutes < item && servicesDuration > item).length)
+      return false
     if (endTime4) {
       return (hourInMinutes < endTime) ||
         (

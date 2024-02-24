@@ -53,7 +53,6 @@ export default function Cart() {
     {
       company: company?.id,
       date: schedule.date ? new Date(schedule.date).toISOString() : today,
-      services: selectedServices.flatMap(item => item.id),
       employees: selectedServices.flatMap(selectedService => selectedService.employees.flatMap(employee => employee.id))
     }
   ])
@@ -64,6 +63,7 @@ export default function Cart() {
   const handleSubmit = async () => {
     setIsSubmitting(true)
     const newItems = schedule.items.map(item => {
+      // if no employee selected, select random available employee
       if (!item.employee_id) {
         const employees = selectedServices.find(service => service.id === item.service_id)?.employees || []
         const serviceUnavailables = unavailables.filter(scheduleItem => scheduleItem.service_id === item.service_id)
@@ -142,6 +142,7 @@ export default function Cart() {
                   <HourList
                     dayOfWeek={dayOfWeek}
                     isValidating={isValidating}
+                    totalDuration={totalDuration}
                     unavailableHours={unavailableHours}
                   />
                 )}
