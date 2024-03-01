@@ -77,7 +77,7 @@ export default function Profile({ userData }) {
     formData.append('file', file)
     formData.append('fileName', file.name)
     await api
-      .post(`/site/clients/update/${userData?.id}/picture/`, formData, {
+      .post(`/api/site/clients/${userData?.id}/picture`, formData, {
         headers: { "Content-Type": 'multipart/form-data' }
       })
       .then(() => {

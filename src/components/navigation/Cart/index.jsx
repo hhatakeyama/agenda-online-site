@@ -49,7 +49,7 @@ export default function Cart() {
 
   // Fetch
   const { data, isValidating } = useFetch([
-    organizationSlug && company?.id && selectedServices && schedule.date ? `/site/schedules/unavailables/` : null,
+    organizationSlug && company?.id && selectedServices && schedule.date ? `/site/schedules/unavailables` : null,
     {
       company: company?.id,
       date: schedule.date ? new Date(schedule.date).toISOString() : today,
@@ -78,7 +78,7 @@ export default function Cart() {
       return item
     })
     return await api
-      .post(`/site/schedules/create/`, {
+      .post(`/api/site/schedules`, {
         company_id: company.id,
         client_id: userData.id,
         date: schedule.date.toISOString(),

@@ -15,6 +15,9 @@ export default function Details() {
   // Hooks
   const { company, organization } = useOrganization()
 
+  // Constants
+  const srcThumb = company?.thumb?.indexOf('http') !== -1 ? company?.thumb : `${process.env.NEXT_PUBLIC_API_DOMAIN}/storage/companies/original-${company?.thumb}`
+  
   // Fetch
   const socialMedias = company.socialMedia ? JSON.parse(company.socialMedia) : {}
 
@@ -24,7 +27,7 @@ export default function Details() {
         <Stack>
           {company.thumb && (
             <Image
-              src={company.thumb}
+              src={srcThumb}
               alt="Capa"
               radius="md"
               fit="contain"

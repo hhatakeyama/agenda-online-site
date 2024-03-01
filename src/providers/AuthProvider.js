@@ -26,14 +26,15 @@ function useProvideAuth() {
 
   // Fetch
   const { data: userData, isValidating: userIsValidating, mutate: userMutate } = useFetch([
-    !!isAuthenticated ? '/site/me/' : null
+    !!isAuthenticated ? '/site/me' : null
   ])
 
   // Login with credentials
   const login = async (credentials) => {
     setLoading(true)
+    await api.get('/sanctum/csrf-cookie')
     const response = await api
-      .post('/login-client/', {
+      .post('/api/login-client', {
         email: credentials.email,
         password: credentials.password
       })
@@ -63,7 +64,7 @@ function useProvideAuth() {
   const register = async (newValues) => {
     setLoading(true)
     return await api
-      .post('/site/clients/create/', {
+      .post('/api/site/clients', {
         ...newValues,
         ...(newValues ? { password_confirmation: newValues.confirmPassword } : {})
       })
@@ -88,7 +89,7 @@ function useProvideAuth() {
   const updateUser = async (newValues) => {
     setLoading(true)
     return await api
-      .patch(`/site/clients/update/${userData?.data?.id}/`, {
+      .patch(`/api/site/clients/${userData?.data?.id}`, {
         name: newValues.name,
         email: newValues.email,
         picture: newValues.picture,
@@ -105,7 +106,7 @@ function useProvideAuth() {
   // Logout user from API
   const logout = async () => {
     try {
-      await api.post('/site/logout/')
+      await api.post('/api/site/logout')
     } finally {
       removeCookie(cookieTokenString)
       removeStorage('services')
@@ -115,13 +116,13 @@ function useProvideAuth() {
 
   // Send reset password link
   const forgotPassword = async (email) => {
-    const response = await api.post('/password-reset/', { email })
+    const response = await api.post('/api/password-reset', { email })
     return response
   }
 
   // Reset password
   const resetPassword = async (password, uidb64, hash) => {
-    const response = await api.post('/password-reset/confirm/', {
+    const response = await api.post('/api/password-reset/confirm', {
       password,
       uidb64,
       token: hash
