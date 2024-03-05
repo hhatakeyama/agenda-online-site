@@ -81,7 +81,7 @@ function useProvideAuth() {
         }
       })
       .catch(error => {
-        return { error: error?.response?.data?.message || 'Ocorreu um erro inesperado. Tente novamente mais tarde' }
+        throw error
       })
       .finally(() => setLoading(false))
   }
